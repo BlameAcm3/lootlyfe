@@ -1,0 +1,50 @@
+# Lootlyfe - Cursor Rules
+
+## Architecture principles
+- Feature-based folders in /src/features, never layer-based
+- Each feature owns its api/, hooks/, components/, types.ts
+- Shared UI lives in /src/shared/components
+- No business logic in /app screens - screens call hooks from features
+
+## Data layer
+- All Supabase calls go through /src/features/{feature}/api/
+- All server state is managed by TanStack Query - never useState for server data
+- Client-only state uses Zustand stores in /src/stores
+- Never call supabase.from() directly in a component
+
+## Types
+- Strict TypeScript everywhere
+- Database types come from /src/shared/types/database.ts (generated)
+- Never use `any`. Use `unknown` if truly unknown, then narrow.
+
+## Forms
+- Always use react-hook-form + zod resolver
+- Validation schemas live next to the form component
+
+## Styling
+- Always use theme tokens from /src/shared/theme, never hard-code colors or spacing
+- Respect dark mode via useTheme()
+- All text must use the Text component from /src/shared/components
+
+## Accessibility (non-negotiable)
+- Every pressable must have accessibilityLabel and accessibilityRole
+- Every screen must support Dynamic Type
+- Test with VoiceOver before considering any screen done
+
+## Analytics
+- Every user-initiated action fires a PostHog event via /src/shared/lib/posthog.ts
+- Event names follow snake_case and match the approved event list in /docs/analytics-events.md
+
+## AI features
+- AI suggestion calls go through /src/features/ai-suggestions only
+- All AI features must be skippable - never block core flows
+- Cache AI responses aggressively to control cost
+
+## Security
+- RLS policies enforce all permissions - never trust the client
+- Kids cannot see other kids' data in the same family
+- High-value rewards require parent approval (enforced server-side)
+
+## Commits
+- Use conventional commits: feat:, fix:, chore:, refactor:, docs:
+- Reference the phase when scaffolding: "feat(phase-1): add theme tokens"
