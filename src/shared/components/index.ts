@@ -1,3 +1,4 @@
+export * from './AnalyticsDebugOverlay';
 export * from './Button';
 export * from './Card';
 export * from './EmptyState';

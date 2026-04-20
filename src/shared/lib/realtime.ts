@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/shared/lib/supabase';
 
-const FAMILY_TABLES = ['chores', 'rewards', 'redemptions'] as const;
+const FAMILY_TABLES = ['chores', 'rewards', 'reward_redemptions', 'chore_instances', 'kids'] as const;
 
 export const useFamilyRealtime = (familyId: string | null | undefined) => {
   const queryClient = useQueryClient();

@@ -37,7 +37,7 @@ export const useSession = () => {
       const { data } = await supabase
         .from('families')
         .select('id')
-        .eq('owner_user_id', session.user.id)
+        .eq('created_by', session.user.id)
         .maybeSingle();
       setFamilyId(data?.id ?? null);
     };

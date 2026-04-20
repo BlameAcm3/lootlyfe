@@ -6,8 +6,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useSession } from '@/features/auth';
+import { AnalyticsDebugOverlay } from '@/shared/components';
 import { registerForPushNotificationsAsync, useNotificationListeners } from '@/shared/lib/notifications';
-import { posthog, queryClient } from '@/shared/lib';
+import { capture, posthog, queryClient } from '@/shared/lib';
 import { ThemeProvider } from '@/shared/theme';
 
 export default function RootLayout() {
@@ -41,6 +42,10 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
+    capture('$pageview', { path: pathname });
+  }, [pathname]);
+
+  useEffect(() => {
     if (isLoading) return;
 
     const inAuthRoute = pathname.startsWith('/(auth)');
@@ -60,6 +65,7 @@ export default function RootLayout() {
           <ThemeProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <Stack screenOptions={{ headerShown: false }} />
+              <AnalyticsDebugOverlay />
             </GestureHandlerRootView>
           </ThemeProvider>
         </PostHogProvider>

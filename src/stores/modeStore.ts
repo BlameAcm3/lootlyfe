@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { supabase } from '@/shared/lib/supabase';
 
 type AppMode = 'parent' | 'kid';
 
@@ -24,8 +25,11 @@ const secureStorage = createJSONStorage<Pick<ModeStore, 'mode' | 'activeKidId'>>
 const validateFamilyPin = async (pin?: string): Promise<boolean> => {
   void pin;
   if (__DEV__) return true;
-  // TODO: Replace with Supabase Edge Function call in production.
-  return true;
+  const { data, error } = await supabase.functions.invoke('validate-family-pin', {
+    body: { pin },
+  });
+  if (error) return false;
+  return Boolean((data as { valid?: boolean } | null)?.valid);
 };
 
 export const useModeStore = create<ModeStore>()(

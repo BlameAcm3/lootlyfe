@@ -36,11 +36,12 @@ export const registerForPushNotificationsAsync = async (userId: string): Promise
 
   await supabase.from('push_tokens').upsert(
     {
-      user_id: userId,
+      profile_id: userId,
       token,
-      platform: Device.osName ?? 'unknown',
+      platform: Device.osName?.toLowerCase().includes('ios') ? 'ios' : 'android',
+      device_id: Device.modelId ?? null,
     },
-    { onConflict: 'token' },
+    { onConflict: 'profile_id,token' },
   );
 
   return token;

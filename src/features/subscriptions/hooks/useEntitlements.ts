@@ -17,7 +17,7 @@ export const useEntitlements = () => {
       const { data } = await supabase
         .from('families')
         .select('subscription_tier')
-        .eq('owner_user_id', user.id)
+        .eq('created_by', user.id)
         .maybeSingle();
 
       return data?.subscription_tier === 'pro' ? 'pro' : 'free';
