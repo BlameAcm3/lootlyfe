@@ -1,5 +1,11 @@
 import { Stack } from 'expo-router';
 
+import { ErrorBoundary } from '@/shared/components';
+
 export default function AuthLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <ErrorBoundary>
+      <Stack screenOptions={{ headerShown: false }} />
+    </ErrorBoundary>
+  );
 }

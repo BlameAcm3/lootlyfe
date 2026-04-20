@@ -1,13 +1,33 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import * as SecureStore from 'expo-secure-store';
 
-type ThemeMode = 'light' | 'dark' | 'system';
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 type ThemeStore = {
-  mode: ThemeMode;
-  setMode: (mode: ThemeMode) => void;
+  colorScheme: ThemeMode;
+  setColorScheme: (colorScheme: ThemeMode) => void;
 };
 
-export const useThemeStore = create<ThemeStore>((set) => ({
-  mode: 'system',
-  setMode: (mode) => set({ mode }),
+const secureStorage = createJSONStorage<ThemeStore>(() => ({
+  getItem: async (name) => SecureStore.getItemAsync(name),
+  setItem: async (name, value) => {
+    await SecureStore.setItemAsync(name, value);
+  },
+  removeItem: async (name) => {
+    await SecureStore.deleteItemAsync(name);
+  },
 }));
+
+export const useThemeStore = create<ThemeStore>()(
+  persist(
+    (set) => ({
+      colorScheme: 'system',
+      setColorScheme: (colorScheme) => set({ colorScheme }),
+    }),
+    {
+      name: 'lootlyfe-theme-store',
+      storage: secureStorage,
+    },
+  ),
+);

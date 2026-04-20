@@ -22,6 +22,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.lootlyfe.app',
+    entitlements: {
+      'aps-environment': 'development',
+    },
     infoPlist: {
       UIBackgroundModes: ['remote-notification'],
     },
