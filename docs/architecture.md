@@ -53,3 +53,12 @@ hard-coding styles. This makes dark mode and future brand updates predictable.
 Layer-based structures (`components/`, `services/`, `hooks/`) become hard to navigate in apps with
 many tightly related domains. Feature folders keep auth, chores, rewards, and points concerns
 self-contained, lower cross-feature coupling, and reduce regressions during rapid product iteration.
+
+## Database Types Regeneration
+
+After changing SQL migrations in `supabase/migrations`, regenerate the TypeScript database types so
+feature APIs stay aligned with schema and function signatures.
+
+1. Run migrations against your Supabase project.
+2. Run `npm run db:types`.
+3. Commit the updated `src/shared/types/database.ts` with the migration changes.
