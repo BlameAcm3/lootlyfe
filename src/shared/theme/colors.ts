@@ -1,50 +1,77 @@
 type ColorTokens = {
   bg: string;
+  bgCard: string;
   bgElevated: string;
   surface: string;
+  surfaceHover: string;
   border: string;
+  borderStrong: string;
   text: string;
   textMuted: string;
+  textDim: string;
   textInverse: string;
   primary: string;
+  primaryLight: string;
+  primaryMuted: string;
   primaryText: string;
+  accent: string;
+  accentLight: string;
+  gold: string;
+  goldLight: string;
   success: string;
   warning: string;
   danger: string;
-  accent: string;
   disabled: string;
 };
 
 export const lightColors: ColorTokens = {
-  bg: '#FFF9F2',
+  bg: '#F4F6FA',
+  bgCard: '#FFFFFF',
   bgElevated: '#FFFFFF',
-  surface: '#FFF1E3',
-  border: '#E8D7C4',
-  text: '#2E241F',
-  textMuted: '#77665A',
-  textInverse: '#FFF9F2',
-  primary: '#E67A4A',
+  surface: '#EEF2F7',
+  surfaceHover: '#E2E8F0',
+  border: '#E2E8F0',
+  borderStrong: '#CBD5E1',
+  text: '#0F172A',
+  textMuted: '#64748B',
+  textDim: '#94A3B8',
+  textInverse: '#FFFFFF',
+  primary: '#8b5cf6',
+  primaryLight: '#a78bfa',
+  primaryMuted: '#ede9fe',
   primaryText: '#FFFFFF',
-  success: '#3C9D6B',
-  warning: '#D39B2F',
-  danger: '#D25A52',
-  accent: '#8B68C9',
-  disabled: '#C9B8A8',
+  accent: '#22d3ee',
+  accentLight: '#67e8f9',
+  gold: '#f59e0b',
+  goldLight: '#fcd34d',
+  success: '#10b981',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  disabled: '#94A3B8',
 };
 
 export const darkColors: ColorTokens = {
-  bg: '#1A1310',
-  bgElevated: '#2A201A',
-  surface: '#342921',
-  border: '#4B3C31',
-  text: '#FCECDD',
-  textMuted: '#CDB8A4',
-  textInverse: '#1A1310',
-  primary: '#F29D71',
-  primaryText: '#1A1310',
-  success: '#74C89A',
-  warning: '#E6B757',
-  danger: '#F08B83',
-  accent: '#B69AF0',
-  disabled: '#6C5A4D',
+  bg: '#07061a',
+  bgCard: '#0f0e2c',
+  bgElevated: '#181640',
+  surface: '#1e1b4b',
+  surfaceHover: '#2d2a5e',
+  border: 'rgba(139,92,246,0.15)',
+  borderStrong: 'rgba(139,92,246,0.4)',
+  text: '#f0eeff',
+  textMuted: '#7c6faa',
+  textDim: '#3d3566',
+  textInverse: '#07061a',
+  primary: '#8b5cf6',
+  primaryLight: '#a78bfa',
+  primaryMuted: '#2e1065',
+  primaryText: '#FFFFFF',
+  accent: '#22d3ee',
+  accentLight: '#67e8f9',
+  gold: '#f59e0b',
+  goldLight: '#fcd34d',
+  success: '#10b981',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  disabled: '#3d3566',
 };

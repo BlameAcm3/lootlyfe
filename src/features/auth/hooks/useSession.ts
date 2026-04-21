@@ -1,15 +1,16 @@
-import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useLayoutEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/shared/lib/supabase';
 import { useSessionStore } from '@/stores/sessionStore';
 
-const SESSION_QUERY_KEY = ['auth', 'session'] as const;
+export const SESSION_QUERY_KEY = ['auth', 'session'] as const;
 
 export const useSession = () => {
+  const queryClient = useQueryClient();
   const setSession = useSessionStore((state) => state.setSession);
   const setFamilyId = useSessionStore((state) => state.setFamilyId);
-  const session = useSessionStore((state) => state.session);
+  const storeSession = useSessionStore((state) => state.session);
 
   const query = useQuery({
     queryKey: SESSION_QUERY_KEY,
@@ -22,7 +23,10 @@ export const useSession = () => {
     gcTime: Infinity,
   });
 
-  useEffect(() => {
+  // Prefer React Query once it has run; avoids redirecting to sign-in while Zustand is one tick behind after login.
+  const session = query.data !== undefined ? query.data : storeSession;
+
+  useLayoutEffect(() => {
     if (query.data !== undefined) {
       setSession(query.data);
     }
@@ -34,11 +38,20 @@ export const useSession = () => {
         setFamilyId(null);
         return;
       }
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('families')
         .select('id')
         .eq('created_by', session.user.id)
         .maybeSingle();
+      if (error) {
+        if (__DEV__ && error.code === 'PGRST205') {
+          console.warn(
+            '[Lootlyfe] Supabase has no public.families table. Apply migrations: lootlyfe/supabase/migrations (see Supabase SQL Editor or `supabase db push`).',
+          );
+        }
+        setFamilyId(null);
+        return;
+      }
       setFamilyId(data?.id ?? null);
     };
     void syncFamily();
@@ -48,17 +61,18 @@ export const useSession = () => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      queryClient.setQueryData(SESSION_QUERY_KEY, nextSession);
       setSession(nextSession);
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [setSession]);
+  }, [queryClient, setSession]);
 
   return {
     session,
-    isLoading: query.isLoading,
+    isLoading: query.isPending,
     user: session?.user ?? null,
   };
 };

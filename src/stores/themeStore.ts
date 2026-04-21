@@ -22,7 +22,8 @@ const secureStorage = createJSONStorage<ThemeStore>(() => ({
 export const useThemeStore = create<ThemeStore>()(
   persist(
     (set) => ({
-      colorScheme: 'system',
+      /** Default dark matches Lootlyfe RPG UI; users can switch in settings. */
+      colorScheme: 'dark',
       setColorScheme: (colorScheme) => set({ colorScheme }),
     }),
     {

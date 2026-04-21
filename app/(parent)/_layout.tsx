@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { Stack, usePathname, useRouter } from 'expo-router';
+import type { Href } from 'expo-router';
+import { Stack, useNavigationContainerRef, usePathname, useRouter, useSegments } from 'expo-router';
 
 import { ErrorBoundary } from '@/shared/components';
-import { ModeSwitcher } from '@/features/auth';
+import { ModeSwitcher, useSession } from '@/features/auth';
 import { useOnboardingStatus } from '@/features/families';
 import { useFamilyRealtime } from '@/shared/lib';
 import { useModeStore } from '@/stores/modeStore';
@@ -11,26 +12,57 @@ import { useSessionStore } from '@/stores/sessionStore';
 export default function ParentLayout() {
   const familyId = useSessionStore((state) => state.familyId);
   const mode = useModeStore((state) => state.mode);
-  const pathname = usePathname();
   const router = useRouter();
-  const onboarding = useOnboardingStatus();
+  const navigationRef = useNavigationContainerRef();
+  const pathname = usePathname();
+  const segments = useSegments() as string[];
+  const { user, isLoading: sessionLoading } = useSession();
+  const { isLoading: onboardingLoading, completed, nextStep } = useOnboardingStatus();
 
   useFamilyRealtime(familyId);
 
+  const inOnboarding =
+    segments.some((s) => String(s).includes('onboarding')) || pathname.includes('onboarding');
+  const inParentTabs = segments.includes('(tabs)');
+
   useEffect(() => {
-    if (mode === 'kid') {
-      router.replace('/(kid)/(tabs)');
-      return;
-    }
-    if (onboarding.isLoading) return;
-    if (!onboarding.completed && !pathname.startsWith('/(parent)/onboarding')) {
-      router.replace(onboarding.nextStep as '/(parent)/onboarding/create-family');
-      return;
-    }
-    if (onboarding.completed && pathname.startsWith('/(parent)/onboarding')) {
-      router.replace('/(parent)/(tabs)');
-    }
-  }, [mode, onboarding.completed, onboarding.isLoading, onboarding.nextStep, pathname, router]);
+    let cancelled = false;
+
+    const run = () => {
+      if (cancelled) return;
+      if (!navigationRef.isReady()) {
+        requestAnimationFrame(run);
+        return;
+      }
+
+      if (mode === 'kid') {
+        router.replace('/(kid)/(tabs)');
+        return;
+      }
+
+      if (sessionLoading || onboardingLoading || !user) return;
+      if (completed || inOnboarding) return;
+      if (inParentTabs) {
+        router.replace(nextStep as Href);
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    completed,
+    inOnboarding,
+    inParentTabs,
+    mode,
+    navigationRef,
+    nextStep,
+    onboardingLoading,
+    router,
+    sessionLoading,
+    user,
+  ]);
 
   return (
     <ErrorBoundary>

@@ -6,3 +6,4 @@ export * from './hooks/useSignIn';
 export * from './hooks/useSignOut';
 export * from './hooks/useSignUp';
 export * from './types';
+export * from './utils/formatAuthError';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 
 import { Button, Input, Modal, Pressable, Text } from '@/shared/components';
 import { useTheme } from '@/shared/hooks';
@@ -31,16 +31,24 @@ export const ModeSwitcher = () => {
       <Modal visible={isOpen} onClose={() => setIsOpen(false)} accessibilityLabel="Close mode switcher">
         {mode === 'parent' ? (
           <View style={{ gap: spacing.sm }}>
-            <Text variant="h3">Choose a kid</Text>
-            <Text color="muted">Pick who is using the app right now.</Text>
+            <Text variant="h3">Kid mode</Text>
+            <Text color="muted">
+              {(kidsQuery.data ?? []).length === 0
+                ? 'Add a kid from the Family tab when you are ready. Kid mode is optional.'
+                : 'Pick who is using the app right now.'}
+            </Text>
             {(kidsQuery.data ?? []).map((kid) => (
               <Pressable
                 key={kid.id}
                 accessibilityLabel={`Enter kid mode as ${kid.display_name}`}
                 onPress={async () => {
-                  setActiveKid(kid.id);
-                  await setMode('kid');
-                  setIsOpen(false);
+                  try {
+                    setActiveKid(kid.id);
+                    await setMode('kid');
+                    setIsOpen(false);
+                  } catch (e) {
+                    Alert.alert('Could not switch mode', e instanceof Error ? e.message : 'Try again.');
+                  }
                 }}
                 style={{
                   backgroundColor: colors.surface,
@@ -72,9 +80,18 @@ export const ModeSwitcher = () => {
               accessibilityLabel="Switch to parent mode"
               label="Back to Parent"
               onPress={async () => {
-                await setMode('parent', pin);
-                setIsOpen(false);
-                setPin('');
+                try {
+                  await setMode('parent', pin);
+                  setIsOpen(false);
+                  setPin('');
+                } catch (e) {
+                  Alert.alert(
+                    'PIN does not match',
+                    e instanceof Error
+                      ? e.message
+                      : 'Use the same PIN you entered when you created your family.',
+                  );
+                }
               }}
             />
           </View>

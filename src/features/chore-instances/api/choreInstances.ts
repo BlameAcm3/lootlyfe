@@ -6,7 +6,7 @@ const today = new Date().toISOString().slice(0, 10);
 export const listTodaysFamilyInstances = async (familyId: string) => {
   const { data, error } = await supabase
     .from('chore_instances')
-    .select('*, chores(id,title,points,requires_approval), kids(id,display_name,avatar_emoji,color_theme)')
+    .select('*, chores(id,title,points,requires_approval,high_value,description), kids(id,display_name,avatar_emoji,color_theme)')
     .eq('family_id', familyId)
     .eq('due_date', today)
     .order('created_at', { ascending: true });
@@ -17,7 +17,7 @@ export const listTodaysFamilyInstances = async (familyId: string) => {
 export const listTodaysKidInstances = async (familyId: string, kidId: string) => {
   const { data, error } = await supabase
     .from('chore_instances')
-    .select('*, chores(id,title,points,requires_approval)')
+    .select('*, chores(id,title,points,requires_approval,high_value,description)')
     .eq('family_id', familyId)
     .eq('kid_id', kidId)
     .eq('due_date', today)

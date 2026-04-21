@@ -1,5 +1,4 @@
 import { PostHog } from 'posthog-react-native';
-import { create } from 'zustand';
 
 import { env } from '@/shared/lib/env';
 
@@ -24,41 +23,12 @@ export type EventName =
 
 export type Properties = Record<string, string | number | boolean | null>;
 
-type DebugEvent = {
-  name: string;
-  properties?: Properties;
-  timestamp: number;
-};
-
-type AnalyticsDebugStore = {
-  enabled: boolean;
-  events: DebugEvent[];
-  toggleEnabled: () => void;
-  pushEvent: (event: DebugEvent) => void;
-};
-
-export const useAnalyticsDebugStore = create<AnalyticsDebugStore>((set) => ({
-  enabled: false,
-  events: [],
-  toggleEnabled: () => set((state) => ({ enabled: !state.enabled })),
-  pushEvent: (event) =>
-    set((state) => ({
-      events: [event, ...state.events].slice(0, 10),
-    })),
-}));
-
 export const track = (event: EventName, properties?: Properties) => {
   posthog.capture(event, properties);
-  if (__DEV__) {
-    useAnalyticsDebugStore.getState().pushEvent({ name: event, properties, timestamp: Date.now() });
-  }
 };
 
 export const capture = (event: string, properties?: Properties) => {
   posthog.capture(event, properties);
-  if (__DEV__) {
-    useAnalyticsDebugStore.getState().pushEvent({ name: event, properties, timestamp: Date.now() });
-  }
 };
 
 export const identify = (userId: string, traits?: Properties) => {

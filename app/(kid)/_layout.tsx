@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useNavigationContainerRef, useRouter } from 'expo-router';
 
 import { ErrorBoundary } from '@/shared/components';
 import { ModeSwitcher } from '@/features/auth';
@@ -11,13 +11,28 @@ export default function KidLayout() {
   const familyId = useSessionStore((state) => state.familyId);
   const mode = useModeStore((state) => state.mode);
   const router = useRouter();
+  const navigationRef = useNavigationContainerRef();
   useFamilyRealtime(familyId);
 
   useEffect(() => {
-    if (mode !== 'kid') {
-      router.replace('/(parent)/(tabs)');
-    }
-  }, [mode, router]);
+    let cancelled = false;
+
+    const run = () => {
+      if (cancelled) return;
+      if (!navigationRef.isReady()) {
+        requestAnimationFrame(run);
+        return;
+      }
+      if (mode !== 'kid') {
+        router.replace('/(parent)/(tabs)');
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, navigationRef, router]);
 
   return (
     <ErrorBoundary>

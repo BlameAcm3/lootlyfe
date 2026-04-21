@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { signInWithEmail, signInWithMagicLink } from '@/features/auth/api/auth';
+import { SESSION_QUERY_KEY } from '@/features/auth/hooks/useSession';
 import { identify } from '@/shared/lib/posthog';
 
 export const useSignIn = () => {
@@ -18,7 +19,7 @@ export const useSignIn = () => {
       return authResponse;
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'session'] });
+      await queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
     },
   });
 };

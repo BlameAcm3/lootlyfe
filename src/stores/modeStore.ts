@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import { createJSONStorage, persist } from 'zustand/middleware';
+
 import { supabase } from '@/shared/lib/supabase';
+import { useSessionStore } from './sessionStore';
 
 type AppMode = 'parent' | 'kid';
 
@@ -22,14 +24,27 @@ const secureStorage = createJSONStorage<Pick<ModeStore, 'mode' | 'activeKidId'>>
   },
 }));
 
+/**
+ * Compares the entered PIN to the value stored on the family row (see createFamily).
+ * The edge function is still a stub; this works without deploying it.
+ */
 const validateFamilyPin = async (pin?: string): Promise<boolean> => {
-  void pin;
-  if (__DEV__) return true;
-  const { data, error } = await supabase.functions.invoke('validate-family-pin', {
-    body: { pin },
-  });
-  if (error) return false;
-  return Boolean((data as { valid?: boolean } | null)?.valid);
+  const trimmed = pin?.trim() ?? '';
+  if (trimmed.length < 4) return false;
+
+  const familyId = useSessionStore.getState().familyId;
+  if (!familyId) return false;
+
+  const { data, error } = await supabase
+    .from('families')
+    .select('parent_pin_hash')
+    .eq('id', familyId)
+    .maybeSingle();
+
+  if (error || data == null) return false;
+
+  // Column stores the PIN as entered at family creation (hashing can be added server-side later).
+  return data.parent_pin_hash === trimmed;
 };
 
 export const useModeStore = create<ModeStore>()(

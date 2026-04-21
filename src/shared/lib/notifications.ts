@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { useEffect } from 'react';
-import { router } from 'expo-router';
+import { router, useNavigationContainerRef } from 'expo-router';
 
 import { supabase } from '@/shared/lib/supabase';
 
@@ -31,6 +31,15 @@ export const registerForPushNotificationsAsync = async (userId: string): Promise
 
   const projectId =
     Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+  if (!projectId) {
+    if (__DEV__) {
+      console.warn(
+        '[Lootlyfe] Push skipped: no EAS project ID. Add EXPO_PUBLIC_EAS_PROJECT_ID to .env (from expo.dev project settings or `npx eas init`).',
+      );
+    }
+    return null;
+  }
+
   const tokenResponse = await Notifications.getExpoPushTokenAsync({ projectId });
   const token = tokenResponse.data;
 
@@ -48,6 +57,8 @@ export const registerForPushNotificationsAsync = async (userId: string): Promise
 };
 
 export const useNotificationListeners = () => {
+  const navigationRef = useNavigationContainerRef();
+
   useEffect(() => {
     const foregroundSub = Notifications.addNotificationReceivedListener(() => {
       // Intentionally left blank; app-specific UI hooks in later phases.
@@ -55,7 +66,7 @@ export const useNotificationListeners = () => {
 
     const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
       const route = response.notification.request.content.data?.route;
-      if (typeof route === 'string' && route.length > 0) {
+      if (typeof route === 'string' && route.length > 0 && navigationRef.isReady()) {
         router.push(route as never);
       }
     });
@@ -64,5 +75,5 @@ export const useNotificationListeners = () => {
       foregroundSub.remove();
       responseSub.remove();
     };
-  }, []);
+  }, [navigationRef]);
 };

@@ -21,6 +21,8 @@ type Props = {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   testID?: string;
+  /** Stretch to parent width (e.g. full-width form actions). */
+  fullWidth?: boolean;
 };
 
 export const Button = ({
@@ -35,6 +37,7 @@ export const Button = ({
   leftIcon,
   rightIcon,
   testID,
+  fullWidth = false,
 }: Props) => {
   const { colors, spacing, radii } = useTheme();
   const isDisabled = disabled || loading;
@@ -70,6 +73,7 @@ export const Button = ({
       }}
       style={({ pressed }) => [
         styles.base,
+        fullWidth ? { alignSelf: 'stretch' } : null,
         {
           borderRadius: radii.md,
           borderWidth: variant === 'ghost' ? 0 : StyleSheet.hairlineWidth,

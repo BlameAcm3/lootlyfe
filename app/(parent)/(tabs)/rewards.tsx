@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { useApproveRedemption, useRedemptions } from '@/features/redemptions';
 import { useCreateReward, useRewards } from '@/features/rewards';
-import { Button, Card, EmptyState, Input, Screen, Stack, Text } from '@/shared/components';
+import { Button, Card, EmptyState, Input, Screen, ScreenHeader, Stack, Text } from '@/shared/components';
 import { useSessionStore } from '@/stores/sessionStore';
 
 export default function ParentRewardsScreen() {
@@ -16,23 +16,27 @@ export default function ParentRewardsScreen() {
 
   return (
     <Screen scroll>
-      <Stack gap="lg">
-        <Text variant="h1">Rewards</Text>
+      <Stack gap="xl">
+        <ScreenHeader
+          title="Rewards"
+          subtitle="Kids spend points on rewards you define. You approve redemptions from this screen."
+        />
 
         <Card>
-          <Stack gap="sm">
-            <Text variant="h3">Add reward</Text>
+          <Stack gap="md">
+            <Text variant="h3">Create a reward</Text>
             <Input accessibilityLabel="Reward title" label="Title" value={title} onChangeText={setTitle} />
             <Input
               accessibilityLabel="Reward points cost"
-              label="Cost points"
+              label="Point cost"
               value={cost}
               keyboardType="number-pad"
               onChangeText={setCost}
             />
             <Button
               accessibilityLabel="Create reward"
-              label="Create reward"
+              label="Save reward"
+              fullWidth
               loading={createRewardMutation.isPending}
               onPress={async () => {
                 if (!familyId || !title.trim()) return;
@@ -50,32 +54,44 @@ export default function ParentRewardsScreen() {
           </Stack>
         </Card>
 
-        {(rewardsQuery.data ?? []).length === 0 ? (
-          <EmptyState title="No rewards yet" description="Create rewards to motivate your kids." />
-        ) : (
-          (rewardsQuery.data ?? []).map((reward) => (
-            <Card key={reward.id}>
-              <Text variant="h3">{reward.icon_emoji ?? '🎁'} {reward.title}</Text>
-              <Text color="muted">{reward.cost_points} points</Text>
-            </Card>
-          ))
-        )}
-
         <Stack gap="sm">
-          <Text variant="h2">Pending redemption requests</Text>
+          <Text variant="h2">Catalog</Text>
+          {(rewardsQuery.data ?? []).length === 0 ? (
+            <Card>
+              <EmptyState title="No rewards yet" description="Add screen time, treats, or outings kids can unlock." />
+            </Card>
+          ) : (
+            (rewardsQuery.data ?? []).map((reward) => (
+              <Card key={reward.id}>
+                <Stack gap="xs">
+                  <Text variant="h3">
+                    {reward.icon_emoji ?? '🎁'} {reward.title}
+                  </Text>
+                  <Text color="muted">{reward.cost_points} points</Text>
+                </Stack>
+              </Card>
+            ))
+          )}
+        </Stack>
+
+        <Stack gap="md">
+          <Text variant="h2">Pending requests</Text>
           {(redemptionsQuery.data ?? []).length === 0 ? (
-            <EmptyState title="Nothing pending" description="New redemption requests will show up here." />
+            <Card>
+              <EmptyState title="Nothing pending" description="When a kid requests a reward, it will show up here." />
+            </Card>
           ) : (
             (redemptionsQuery.data ?? []).map((redemption) => (
               <Card key={redemption.id}>
-                <Stack gap="sm">
-                  <Text>
-                    {(redemption.kids as { display_name?: string } | null)?.display_name ?? 'Kid'} requested{' '}
-                    {(redemption.rewards as { title?: string } | null)?.title ?? 'reward'}
+                <Stack gap="md">
+                  <Text variant="body">
+                    {(redemption.kids as { display_name?: string } | null)?.display_name ?? 'Kid'} wants{' '}
+                    {(redemption.rewards as { title?: string } | null)?.title ?? 'a reward'}
                   </Text>
                   <Button
                     accessibilityLabel="Approve reward redemption"
-                    label="Approve"
+                    label="Approve redemption"
+                    fullWidth
                     size="sm"
                     loading={approveRedemptionMutation.isPending}
                     onPress={async () => {

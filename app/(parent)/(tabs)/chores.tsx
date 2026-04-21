@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { ChoreForm, useChores, useCreateChore, useUpdateChore } from '@/features/chores';
 import { useKids } from '@/features/kids';
-import { Card, EmptyState, Modal, Pressable, Screen, Stack, Text, Button } from '@/shared/components';
+import { Button, Card, EmptyState, Modal, Pressable, Screen, ScreenHeader, Stack, Text } from '@/shared/components';
 import { useSessionStore } from '@/stores/sessionStore';
 
 export default function ParentChoresScreen() {
@@ -19,12 +19,26 @@ export default function ParentChoresScreen() {
 
   return (
     <Screen scroll>
-      <Stack gap="lg">
-        <Text variant="h1">Chore templates</Text>
-        <Button accessibilityLabel="Add chore" label="Add chore" onPress={() => setIsOpen(true)} />
+      <Stack gap="xl">
+        <ScreenHeader
+          title="Quest templates"
+          subtitle="Reusable quests for your heroes. Lootlyfe rolls today’s tasks from schedules and assignments."
+        />
+
+        <Button
+          accessibilityLabel="Add chore"
+          label="New chore template"
+          fullWidth
+          onPress={() => setIsOpen(true)}
+        />
 
         {(choresQuery.data ?? []).length === 0 ? (
-          <EmptyState title="No chores yet" description="Create your first chore template to get started." />
+          <Card>
+            <EmptyState
+              title="No chore templates yet"
+              description="Create your first template, assign it to kids, and pick a schedule. You can also finish onboarding to load starter chores."
+            />
+          </Card>
         ) : (
           (choresQuery.data ?? []).map((chore) => (
             <Pressable
@@ -36,17 +50,25 @@ export default function ParentChoresScreen() {
               }}
             >
               <Card>
-                <Text variant="h3">{chore.title}</Text>
-                <Text color="muted">{chore.points} points • {chore.schedule_type}</Text>
+                <Stack gap="xs">
+                  <Text variant="h3">{chore.title}</Text>
+                  <Text color="muted">
+                    {chore.points} points · {chore.schedule_type.replace('_', ' ')}
+                  </Text>
+                </Stack>
               </Card>
             </Pressable>
           ))
         )}
 
-        <Modal visible={isOpen} onClose={() => {
-          setIsOpen(false);
-          setEditingId(null);
-        }} accessibilityLabel="Close chore form">
+        <Modal
+          visible={isOpen}
+          onClose={() => {
+            setIsOpen(false);
+            setEditingId(null);
+          }}
+          accessibilityLabel="Close chore form"
+        >
           <ChoreForm
             submitLabel={editingChore ? 'Update chore' : 'Create chore'}
             loading={createMutation.isPending || updateMutation.isPending}

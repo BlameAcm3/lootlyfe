@@ -1,11 +1,21 @@
 import { useMemo, useState } from 'react';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { useSession } from '@/features/auth';
 import { batchCreateStarterChores, starterChores } from '@/features/chores';
 import { useFamily } from '@/features/families';
 import { useKids } from '@/features/kids';
-import { Button, EmptyState, Pressable, Screen, Stack, Text } from '@/shared/components';
+import {
+  Button,
+  EmptyState,
+  OnboardingHeroBar,
+  Pressable,
+  Screen,
+  ScreenHeader,
+  Stack,
+  Text,
+} from '@/shared/components';
 import { useTheme } from '@/shared/hooks';
 
 export default function StarterChoresScreen() {
@@ -37,38 +47,75 @@ export default function StarterChoresScreen() {
 
   return (
     <Screen scroll>
-      <Stack gap="lg">
-        <Text variant="h1">Starter chores</Text>
-        <Text color="muted">Pick a few to launch your family routine.</Text>
-        {choices.map((chore) => {
-          const selected = selectedIds.includes(chore.id);
-          return (
-            <Pressable
-              key={chore.id}
-              accessibilityLabel={`Toggle starter chore ${chore.title}`}
-              onPress={() =>
-                setSelectedIds((current) =>
-                  selected ? current.filter((id) => id !== chore.id) : [...current, chore.id],
-                )
-              }
-              style={{
-                backgroundColor: selected ? colors.surface : colors.bgElevated,
-                borderColor: colors.border,
-                borderRadius: radii.md,
-                borderWidth: 1,
-                padding: spacing.md,
-              }}
-            >
-              <Text variant="label">{selected ? '☑' : '☐'} {chore.title}</Text>
-              <Text variant="bodySm" color="muted">
-                {chore.description} ({chore.points} points)
-              </Text>
-            </Pressable>
-          );
-        })}
+      <Stack gap="xl">
+        <OnboardingHeroBar step={3} />
+        <Text
+          variant="caption"
+          color="muted"
+          style={{ letterSpacing: 2, textTransform: 'uppercase', fontWeight: '700' }}
+        >
+          Step 3 of 3
+        </Text>
+        <ScreenHeader
+          title="Pick starter quests"
+          subtitle="We will create templates and assign them to every hero. Edit anytime from the Quests tab."
+        />
+
+        <Stack gap="md">
+          {choices.map((chore) => {
+            const selected = selectedIds.includes(chore.id);
+            return (
+              <Pressable
+                key={chore.id}
+                accessibilityLabel={`Toggle starter chore ${chore.title}`}
+                onPress={() =>
+                  setSelectedIds((current) =>
+                    selected ? current.filter((id) => id !== chore.id) : [...current, chore.id],
+                  )
+                }
+                style={{
+                  backgroundColor: selected ? colors.primaryMuted : colors.bgElevated,
+                  borderColor: selected ? colors.primary : colors.border,
+                  borderRadius: radii.lg,
+                  borderWidth: selected ? 2 : 1,
+                  padding: spacing.lg,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md }}>
+                  <View
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: radii.sm,
+                      borderWidth: 2,
+                      borderColor: selected ? colors.primary : colors.borderStrong,
+                      backgroundColor: selected ? colors.primary : 'transparent',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginTop: 2,
+                    }}
+                  >
+                    {selected ? <Text style={{ color: colors.primaryText, fontSize: 14, fontWeight: '800' }}>✓</Text> : null}
+                  </View>
+                  <Stack gap="xs" style={{ flex: 1 }}>
+                    <Text variant="h3">{chore.title}</Text>
+                    <Text variant="bodySm" color="muted">
+                      {chore.description}
+                    </Text>
+                    <Text variant="caption" color="primary">
+                      {chore.points} points
+                    </Text>
+                  </Stack>
+                </View>
+              </Pressable>
+            );
+          })}
+        </Stack>
+
         <Button
           accessibilityLabel="Create selected starter chores"
           label="Create selected chores"
+          fullWidth
           loading={isSaving}
           onPress={async () => {
             if (!familyQuery.data?.id || !user?.id || selectedIds.length === 0) return;
