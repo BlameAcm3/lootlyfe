@@ -1,8 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+﻿import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { signOut } from '@/features/auth/api/auth';
 import { SESSION_QUERY_KEY } from '@/features/auth/hooks/useSession';
-import { reset } from '@/shared/lib/posthog';
+import { reset } from '@/shared/lib/analytics';
 import { useSessionStore } from '@/stores/sessionStore';
 
 export const useSignOut = () => {

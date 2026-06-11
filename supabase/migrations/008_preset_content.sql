@@ -1,0 +1,13 @@
+-- Preset content placeholder.
+--
+-- Per AGENTS.md, preset quests, preset loot, and achievement definitions are
+-- CLIENT-SIDE typed data in data/ — they are templates the NPC instantiates,
+-- not server rows. The database holds only guild-created rows (quests,
+-- loot_items, ...) plus the global cosmetic_items catalog.
+--
+-- This migration intentionally inserts nothing. When server-side preset
+-- content is ever needed (e.g. seeding the cosmetic_items catalog for
+-- seasonal drops), add the inserts below so they version with the schema.
+
+-- insert into public.cosmetic_items (name, slot, achievement_point_cost, premium_only, season)
+-- values (...);

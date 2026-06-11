@@ -1,6 +1,6 @@
 export const useAiSuggestions = () => {
   return {
-    isPro: false,
+    isPremium: false,
     suggestions: [],
   };
 };

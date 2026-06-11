@@ -1,14 +1,21 @@
 # PostHog Approved Events
 
-- `family_created` { `family_id` }
-- `kid_added` { `family_id`, `kid_id`, `age_range` }
-- `chore_created` { `family_id`, `chore_id`, `points`, `schedule_type` }
-- `chore_completed` { `family_id`, `chore_id`, `kid_id`, `points_awarded` }
-- `chore_approved` { `family_id`, `chore_id`, `kid_id`, `parent_id` }
-- `points_awarded` { `family_id`, `kid_id`, `amount`, `source` }
-- `reward_created` { `family_id`, `reward_id`, `cost` }
-- `reward_redeemed` { `family_id`, `reward_id`, `kid_id`, `cost` }
-- `reward_approved` { `family_id`, `reward_id`, `kid_id`, `parent_id` }
+All events fire in parent (NPC) mode only — never from adventurer mode or anonymous (kid device)
+sessions. In adventurer mode, analytics is fully disabled unless
+`EXPO_PUBLIC_ADVENTURER_ANALYTICS_ENABLED=true` (see `src/shared/lib/analytics.ts`); it ships as
+`false` because the Apple Kids Category prohibits third-party analytics transmitting
+device/identifiable data.
+
+- `guild_created` { `guild_id` }
+- `adventurer_added` { `guild_id`, `adventurer_id`, `age_bucket`, `theme_id` }
+- `quest_created` { `guild_id`, `quest_id`, `gold_reward`, `xp_reward` }
+- `quest_completed` { `guild_id`, `quest_id`, `adventurer_id` }
+- `quest_approved` { `guild_id`, `quest_id`, `adventurer_id`, `npc_id` }
+- `gold_awarded` { `guild_id`, `adventurer_id`, `amount`, `source` }
+- `loot_created` { `guild_id`, `loot_id`, `gold_cost` }
+- `loot_redeemed` { `guild_id`, `loot_id`, `adventurer_id`, `gold_cost` }
+- `redemption_approved` { `guild_id`, `loot_id`, `adventurer_id`, `npc_id` }
+- `device_paired` { `guild_id`, `adventurer_id` }
 - `paywall_viewed` { `trigger` }
 - `subscription_started` { `plan` }
 - `ai_suggestion_shown` { `type`, `context` }

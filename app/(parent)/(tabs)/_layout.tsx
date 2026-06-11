@@ -1,21 +1,23 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Tabs } from 'expo-router';
 
-import { useTheme } from '@/shared/hooks';
+import { useLexicon } from '../../../hooks/useLexicon';
+import { useTheme } from '../../../hooks/useTheme';
 
 export default function ParentTabsLayout() {
-  const { colors } = useTheme();
+  const { t } = useLexicon();
+  const { palette } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: palette['accent-info'],
+        tabBarInactiveTintColor: palette['text-muted'],
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          backgroundColor: colors.bgElevated,
-          borderTopColor: colors.border,
+          backgroundColor: palette.surface,
+          borderTopColor: palette.surface,
           borderTopWidth: 1,
           paddingTop: 6,
           height: 64,
@@ -30,7 +32,7 @@ export default function ParentTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t('tab_home'),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="home-variant-outline" size={size ?? 24} color={color} />
           ),
@@ -39,7 +41,7 @@ export default function ParentTabsLayout() {
       <Tabs.Screen
         name="chores"
         options={{
-          title: 'Quests',
+          title: t('quest_plural'),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="sword-cross" size={size ?? 24} color={color} />
           ),
@@ -48,7 +50,7 @@ export default function ParentTabsLayout() {
       <Tabs.Screen
         name="rewards"
         options={{
-          title: 'Rewards',
+          title: t('loot'),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="treasure-chest" size={size ?? 24} color={color} />
           ),
@@ -57,7 +59,7 @@ export default function ParentTabsLayout() {
       <Tabs.Screen
         name="family"
         options={{
-          title: 'Family',
+          title: t('guild'),
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account-group-outline" size={size ?? 24} color={color} />
           ),

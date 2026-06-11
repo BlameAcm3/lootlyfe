@@ -11,7 +11,9 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  ignorePatterns: ['dist', 'node_modules'],
+  // supabase/functions is Deno code (Deno globals, npm: specifiers) checked
+  // by the Supabase CLI, not by the app's tsc/eslint.
+  ignorePatterns: ['dist', 'node_modules', 'supabase/functions'],
   rules: {
     '@typescript-eslint/no-explicit-any': 'error',
   },

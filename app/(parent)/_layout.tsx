@@ -1,29 +1,23 @@
+import { ROUTES } from '../../lib/routes';
 import { useEffect } from 'react';
-import type { Href } from 'expo-router';
 import { Stack, useNavigationContainerRef, usePathname, useRouter, useSegments } from 'expo-router';
 
-import { ErrorBoundary } from '@/shared/components';
+import { ErrorBoundary } from '../../components/ui';
 import { ModeSwitcher, useSession } from '@/features/auth';
-import { useOnboardingStatus } from '@/features/families';
-import { useFamilyRealtime } from '@/shared/lib';
 import { useModeStore } from '@/stores/modeStore';
-import { useSessionStore } from '@/stores/sessionStore';
+import { useCurrentGuild } from '../../queries/guildQueries';
 
 export default function ParentLayout() {
-  const familyId = useSessionStore((state) => state.familyId);
   const mode = useModeStore((state) => state.mode);
   const router = useRouter();
   const navigationRef = useNavigationContainerRef();
   const pathname = usePathname();
   const segments = useSegments() as string[];
   const { user, isLoading: sessionLoading } = useSession();
-  const { isLoading: onboardingLoading, completed, nextStep } = useOnboardingStatus();
+  const { guild, isLoading: guildLoading } = useCurrentGuild();
 
-  useFamilyRealtime(familyId);
-
-  const inOnboarding =
-    segments.some((s) => String(s).includes('onboarding')) || pathname.includes('onboarding');
-  const inParentTabs = segments.includes('(tabs)');
+  const onCreateGuild =
+    segments.some((segment) => segment.includes('create-guild')) || pathname.includes('create-guild');
 
   useEffect(() => {
     let cancelled = false;
@@ -36,14 +30,15 @@ export default function ParentLayout() {
       }
 
       if (mode === 'kid') {
-        router.replace('/(kid)/(tabs)');
+        router.replace(ROUTES.adventurerHome);
         return;
       }
 
-      if (sessionLoading || onboardingLoading || !user) return;
-      if (completed || inOnboarding) return;
-      if (inParentTabs) {
-        router.replace(nextStep as Href);
+      if (sessionLoading || guildLoading || !user) return;
+
+      // Signed in without a guild → guild creation is the only destination.
+      if (!guild && !onCreateGuild) {
+        router.replace('/(parent)/create-guild');
       }
     };
 
@@ -51,18 +46,7 @@ export default function ParentLayout() {
     return () => {
       cancelled = true;
     };
-  }, [
-    completed,
-    inOnboarding,
-    inParentTabs,
-    mode,
-    navigationRef,
-    nextStep,
-    onboardingLoading,
-    router,
-    sessionLoading,
-    user,
-  ]);
+  }, [guild, guildLoading, mode, navigationRef, onCreateGuild, router, sessionLoading, user]);
 
   return (
     <ErrorBoundary>

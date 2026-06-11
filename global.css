@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /*
+   * Theme token defaults = the high-fantasy pack (free tier).
+   * Token names are generic and theme-agnostic; packs swap the values at
+   * runtime via themeVars() in constants/theme.ts. Keep this list in sync
+   * with highFantasyPalette there.
+   */
+  :root {
+    --color-bg-base: #f6edd8; /* parchment */
+    --color-surface: #fdf7e9; /* lighter parchment */
+    --color-surface-raised: #fffdf6; /* brightest parchment */
+    --color-border: #e6d8b8; /* parchment edge */
+    --color-text-primary: #2a2018; /* ink */
+    --color-text-muted: #6b5d4a; /* faded ink */
+    --color-text-inverse: #fdf7e9; /* parchment on accents */
+    --color-accent-loot: #c9a227; /* gold */
+    --color-accent-progress: #3e7c4f; /* forest green */
+    --color-accent-info: #3b6ea5; /* royal blue */
+    --color-danger: #a83232; /* dragon red */
+    --color-accent-achievement: #7a4fbf; /* royal purple */
+  }
+}

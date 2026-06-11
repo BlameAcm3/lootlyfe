@@ -1,3 +1,3 @@
 export const useSubscription = () => {
-  return { isPro: false };
+  return { isPremium: false };
 };

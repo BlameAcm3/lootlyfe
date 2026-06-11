@@ -18,4 +18,9 @@ export const env = {
   supabaseAnonKey: getEnvVar('EXPO_PUBLIC_SUPABASE_ANON_KEY'),
   posthogApiKey: getEnvVar('EXPO_PUBLIC_POSTHOG_API_KEY'),
   posthogHost: getEnvVar('EXPO_PUBLIC_POSTHOG_HOST'),
+  /**
+   * Optional, defaults to false. Adventurer (kid) mode analytics stays fully
+   * disabled unless this is explicitly "true" (Apple Kids Category compliance).
+   */
+  adventurerAnalyticsEnabled: process.env.EXPO_PUBLIC_ADVENTURER_ANALYTICS_ENABLED === 'true',
 } as const;

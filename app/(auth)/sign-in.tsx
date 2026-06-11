@@ -1,91 +1,73 @@
+import { useMemo } from 'react';
 import { Link } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
-import { View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { formatAuthError, useSignIn } from '@/features/auth';
-import { Button, Input, Pressable, Screen, Stack, Text } from '@/shared/components';
-import { useTheme } from '@/shared/hooks';
+import { Button, Card, Input } from '../../components/ui';
+import { useLexicon } from '../../hooks/useLexicon';
 
-const signInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-});
-
-type SignInForm = z.infer<typeof signInSchema>;
+type SignInForm = {
+  email: string;
+  password: string;
+};
 
 export default function SignInScreen() {
-  const { spacing, radii, colors, shadows, colorScheme, setColorScheme } = useTheme();
+  const { t } = useLexicon();
   const mutation = useSignIn();
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t('auth_invalid_email')),
+        password: z.string().min(8, t('auth_password_min')),
+      }),
+    [t],
+  );
+
   const form = useForm<SignInForm>({
     defaultValues: { email: '', password: '' },
-    resolver: zodResolver(signInSchema),
+    resolver: zodResolver(schema),
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
     try {
       await mutation.mutateAsync(values);
     } catch {
-      // Error is stored on mutation.error for display; swallow rejection to avoid uncaught promise.
+      // mutation.error renders below; avoid unhandled rejection.
     }
   });
 
-  const handleMagicLink = async () => {
-    const email = form.getValues('email');
-    if (!email) {
-      form.setError('email', { message: 'Please enter an email first.' });
-      return;
-    }
-    try {
-      await mutation.mutateAsync({ email, magicLink: true });
-    } catch {
-      // mutation.error handles UI
-    }
-  };
-
-  const cycleTheme = () => {
-    setColorScheme(colorScheme === 'dark' ? 'light' : colorScheme === 'light' ? 'system' : 'dark');
-  };
-
   return (
-    <Screen keyboardAvoiding scroll>
-      <Stack gap="2xl">
-        <View style={{ alignItems: 'center', paddingTop: spacing['2xl'], gap: spacing.sm }}>
-          <Text variant="display" style={{ color: colors.primary }}>
-            Lootlyfe
-          </Text>
-          <Text variant="body" color="muted" style={{ textAlign: 'center', maxWidth: 300 }}>
-            Turn chores into points, streaks, and rewards your family can feel good about.
-          </Text>
-        </View>
-
-        <View
-          style={{
-            backgroundColor: colors.bgElevated,
-            borderRadius: radii.xl,
-            borderWidth: 1,
-            borderColor: colors.border,
-            padding: spacing.xl,
-            ...shadows.md,
-          }}
-        >
-          <Stack gap="lg">
-            <Text variant="h2">Welcome back</Text>
-            <Text variant="bodySm" color="muted">
-              Sign in to manage today&apos;s chores and approvals.
+    <SafeAreaView style={{ flex: 1 }} className="bg-bg-base">
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }}>
+          <View className="items-center gap-1 pt-6">
+            <Text className="text-text-primary text-3xl font-extrabold">
+              {t('auth_signin_title')}
             </Text>
+            <Text className="text-text-muted max-w-xs text-center text-sm">
+              {t('auth_signin_subtitle')}
+            </Text>
+          </View>
 
+          <Card className="gap-4">
             <Controller
               control={form.control}
               name="email"
               render={({ field, fieldState }) => (
                 <Input
-                  accessibilityLabel="Email"
+                  accessibilityLabel={t('auth_email_label')}
+                  label={t('auth_email_label')}
                   autoCapitalize="none"
                   autoComplete="email"
                   keyboardType="email-address"
-                  label="Email"
                   onBlur={field.onBlur}
                   onChangeText={field.onChange}
                   value={field.value}
@@ -93,19 +75,18 @@ export default function SignInScreen() {
                 />
               )}
             />
-
             <Controller
               control={form.control}
               name="password"
               render={({ field, fieldState }) => (
                 <Input
-                  accessibilityLabel="Password"
+                  accessibilityLabel={t('auth_password_label')}
+                  label={t('auth_password_label')}
                   autoCapitalize="none"
                   autoComplete="password"
-                  label="Password"
+                  secureTextEntry
                   onBlur={field.onBlur}
                   onChangeText={field.onChange}
-                  secureTextEntry
                   value={field.value}
                   error={fieldState.error?.message}
                 />
@@ -113,46 +94,32 @@ export default function SignInScreen() {
             />
 
             {mutation.error ? (
-              <Text variant="caption" color="danger">
-                {formatAuthError(mutation.error)}
-              </Text>
+              <Text className="text-danger text-xs">{formatAuthError(mutation.error)}</Text>
             ) : null}
 
             <Button
-              accessibilityLabel="Sign in with email"
-              label="Sign in"
-              fullWidth
-              loading={mutation.isPending}
+              accessibilityLabel={t('auth_sign_in_action')}
+              label={t('auth_sign_in_action')}
+              disabled={mutation.isPending}
               onPress={handleSubmit}
             />
-            <Button
-              accessibilityLabel="Send magic link"
-              label="Email me a magic link"
-              fullWidth
-              onPress={handleMagicLink}
-              variant="secondary"
-              disabled={mutation.isPending}
-            />
-          </Stack>
-        </View>
 
-        <Text variant="bodySm" style={{ textAlign: 'center' }}>
-          <Link href="/(auth)/welcome">Welcome screen</Link>
-        </Text>
-        <Text variant="bodySm" style={{ textAlign: 'center' }}>
-          New to Lootlyfe? <Link href="/(auth)/sign-up">Create an account</Link>
-        </Text>
+            {/*
+             * EXTENSION POINT (AGENTS.md > Authentication): Sign in with Apple
+             * and Sign in with Google buttons land here. Requires
+             * expo-apple-authentication / @react-native-google-signin plus
+             * supabase.auth.signInWithIdToken — deferred.
+             */}
+          </Card>
 
-        <Pressable
-          accessibilityLabel="Cycle light, dark, and system theme"
-          onPress={cycleTheme}
-          style={{ alignSelf: 'center', paddingVertical: spacing.sm }}
-        >
-          <Text variant="caption" color="muted">
-            Appearance: {colorScheme}
+          <Text className="text-text-muted text-center text-sm">
+            {t('auth_need_account')}{' '}
+            <Link href="/(auth)/sign-up" className="text-accent-info font-bold">
+              {t('auth_create_account_action')}
+            </Link>
           </Text>
-        </Pressable>
-      </Stack>
-    </Screen>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

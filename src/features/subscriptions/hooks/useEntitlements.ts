@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/shared/lib/supabase';
 import { useSession } from '@/features/auth';
 
-type FamilyTier = 'free' | 'pro';
+import { isPremium, PREMIUM_ENTITLEMENT, type Entitlement } from '../entitlement';
 
 export const useEntitlements = () => {
   const { user } = useSession();
@@ -11,22 +11,25 @@ export const useEntitlements = () => {
   const query = useQuery({
     enabled: Boolean(user?.id),
     queryKey: ['subscriptions', 'entitlements', user?.id],
-    queryFn: async (): Promise<FamilyTier> => {
+    queryFn: async (): Promise<Entitlement> => {
       if (!user?.id) return 'free';
 
       const { data } = await supabase
-        .from('families')
-        .select('subscription_tier')
-        .eq('created_by', user.id)
+        .from('npc_profiles')
+        .select('guilds!npc_profiles_guild_id_fkey(subscription_entitlement)')
+        .eq('user_id', user.id)
+        .limit(1)
         .maybeSingle();
 
-      return data?.subscription_tier === 'pro' ? 'pro' : 'free';
+      return data?.guilds?.subscription_entitlement === PREMIUM_ENTITLEMENT
+        ? PREMIUM_ENTITLEMENT
+        : 'free';
     },
   });
 
-  const activeFamilyTier = query.data ?? 'free';
+  const entitlement = query.data ?? 'free';
   return {
-    isPro: activeFamilyTier === 'pro',
-    activeFamilyTier,
+    isPremium: isPremium(entitlement),
+    entitlement,
   };
 };

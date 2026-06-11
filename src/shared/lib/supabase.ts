@@ -4,7 +4,9 @@ import * as SecureStore from 'expo-secure-store';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import { env } from '@/shared/lib/env';
-import type { Database } from '@/shared/types/database';
+// Superset schema types (legacy family tables + guild domain), generated from
+// the local stack via `npm run typegen`.
+import type { Database } from '../../../types/database';
 
 const STORAGE_PREFIX = 'lootlyfe.supabase.';
 
@@ -26,5 +28,8 @@ export const supabase: SupabaseClient<Database> = createClient<Database>(env.sup
     storage: secureStorageAdapter,
     autoRefreshToken: true,
     detectSessionInUrl: false,
+    // PKCE: email links redirect back with a ?code= the app exchanges in
+    // app/auth/callback.tsx (no web origin exists for the implicit flow).
+    flowType: 'pkce',
   },
 });

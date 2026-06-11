@@ -43,14 +43,13 @@ export const registerForPushNotificationsAsync = async (userId: string): Promise
   const tokenResponse = await Notifications.getExpoPushTokenAsync({ projectId });
   const token = tokenResponse.data;
 
-  await supabase.from('push_tokens').upsert(
+  await supabase.from('device_push_tokens').upsert(
     {
-      profile_id: userId,
+      user_id: userId,
       token,
       platform: Device.osName?.toLowerCase().includes('ios') ? 'ios' : 'android',
-      device_id: Device.modelId ?? null,
     },
-    { onConflict: 'profile_id,token' },
+    { onConflict: 'user_id,token' },
   );
 
   return token;

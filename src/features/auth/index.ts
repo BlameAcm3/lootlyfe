@@ -1,5 +1,4 @@
 export * from './api/auth';
-export * from './components/AuthGate';
 export * from './components/ModeSwitcher';
 export * from './hooks/useSession';
 export * from './hooks/useSignIn';

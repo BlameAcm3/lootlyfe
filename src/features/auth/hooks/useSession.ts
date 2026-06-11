@@ -9,7 +9,6 @@ export const SESSION_QUERY_KEY = ['auth', 'session'] as const;
 export const useSession = () => {
   const queryClient = useQueryClient();
   const setSession = useSessionStore((state) => state.setSession);
-  const setFamilyId = useSessionStore((state) => state.setFamilyId);
   const storeSession = useSessionStore((state) => state.session);
 
   const query = useQuery({
@@ -31,31 +30,6 @@ export const useSession = () => {
       setSession(query.data);
     }
   }, [query.data, setSession]);
-
-  useEffect(() => {
-    const syncFamily = async () => {
-      if (!session?.user?.id) {
-        setFamilyId(null);
-        return;
-      }
-      const { data, error } = await supabase
-        .from('families')
-        .select('id')
-        .eq('created_by', session.user.id)
-        .maybeSingle();
-      if (error) {
-        if (__DEV__ && error.code === 'PGRST205') {
-          console.warn(
-            '[Lootlyfe] Supabase has no public.families table. Apply migrations: lootlyfe/supabase/migrations (see Supabase SQL Editor or `supabase db push`).',
-          );
-        }
-        setFamilyId(null);
-        return;
-      }
-      setFamilyId(data?.id ?? null);
-    };
-    void syncFamily();
-  }, [session?.user?.id, setFamilyId]);
 
   useEffect(() => {
     const {

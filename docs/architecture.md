@@ -1,64 +1,56 @@
 # Lootlyfe Architecture
 
-## Folder Structure Rationale
+The authoritative spec is `CLAUDE.md` at the repo root. This file is a short
+orientation for the current codebase layout.
 
-Lootlyfe uses a feature-based structure under `src/features` so each domain can evolve independently.
-Each feature owns API access, hooks, components, and types. This keeps changes localized, improves
-code discoverability, and supports parallel team ownership as the app grows.
+## Domain
 
-The `app/` directory exists only for route entry points and navigation structure via `expo-router`.
-Route files should stay thin and delegate logic to feature hooks and shared modules.
+Guild domain throughout (guild = family, NPC = parent, adventurer = child,
+quest = chore, loot = reward). Internal names (DB tables, types, variables)
+never change; user-facing terminology is translated per theme pack by the
+lexicon system (`lib/lexicon.ts`, `useLexicon`).
 
-## Data Flow
+## Layout (root folders per CLAUDE.md > Architecture)
 
-Primary data path:
+- `app/` — expo-router routes only: `(auth)`, `(parent)`, `(adventurer)`,
+  `pair/`, `paywall/`, `walkthrough`, `dev/theme-lab` (hidden visual
+  regression surface).
+- `components/` — `ui/` primitives (token-only colors) and `game/` pieces.
+- `constants/` — theme tokens (NativeWind CSS variables), game constants
+  (FREE_TIER_LIMITS, age buckets).
+- `themes/` — theme packs (high-fantasy free; sci-fi & retro-gaming premium)
+  + `ThemeProvider` (runtime palette switching via CSS variables).
+- `queries/` — TanStack Query hooks per domain (guild, adventurers, pairing)
+  with exported key constants.
+- `lib/`, `hooks/`, `store/`, `types/`, `data/` — helpers, hook re-exports,
+  Zustand stores, generated DB types, preset content.
+- `src/features/auth`, `src/features/subscriptions`, `src/shared/lib`,
+  `src/stores` — the surviving service layer (Supabase client, analytics,
+  notifications, session/mode stores). New code should follow the root-folder
+  layout; the `src/` remnants migrate opportunistically.
 
-1. Supabase query/mutation in `src/features/{feature}/api`.
-2. TanStack Query wraps that function in a feature hook (query key + cache policy).
-3. Route/component consumes the hook result and renders UI.
+## Backend
 
-This pattern centralizes server state handling, keeps components declarative, and avoids ad hoc data
-fetching in route files.
+Supabase. Migrations 006-011 define the guild schema, RLS, RPCs
+(`create_guild`, `create_pairing_code`, `set_mode_pin`/`verify_mode_pin`,
+`touch_device_binding`), the gold/XP ledger trigger, and drop the pre-guild
+legacy schema. Edge Functions: `pair-device` (full), `revenuecat-webhook`
+(entitlement mapping), `send-push` (skeleton).
 
-## Auth Flow (v1)
+- Local: `npx supabase start`, `npx supabase db reset`, `npm run typegen`.
+- Hosted: `npx supabase db push`, `npx supabase functions deploy`.
 
-1. Parent signs up and authenticates with Supabase Auth.
-2. Parent creates a family and configures kids.
-3. Kids do not sign in separately in v1.
-4. App switches between parent mode and kid mode at the device level via local state.
+## Identity model
 
-Server authorization remains enforced through RLS policies and family-scoped row ownership.
+- NPCs: full Supabase Auth users with `npc_profiles` rows.
+- Adventurer devices: anonymous auth sessions bound via `device_bindings`
+  (pair-device Edge Function); revocation via `revoked_at`.
+- Single-device families: mode toggle in `useModeStore` (instant into
+  adventurer mode; 4-digit bcrypt PIN to return).
 
-## Multi-Device Sync
+## Status
 
-Lootlyfe uses Supabase Realtime subscriptions scoped to family-owned tables (chores, points, rewards,
-redemptions, approvals). Clients subscribe with family filters so updates propagate to all active
-parent devices quickly while minimizing unrelated events.
-
-TanStack Query integrates with realtime events by invalidating or patching relevant query keys.
-
-## Theming System
-
-Theme primitives live in `src/shared/theme` as design tokens:
-
-- `colors.ts`
-- `spacing.ts`
-- `typography.ts`
-
-A `useTheme` hook in `src/shared/hooks` exposes active tokens and keeps route/components from
-hard-coding styles. This makes dark mode and future brand updates predictable.
-
-## Why Feature Folders Beat Layer Folders Here
-
-Layer-based structures (`components/`, `services/`, `hooks/`) become hard to navigate in apps with
-many tightly related domains. Feature folders keep auth, chores, rewards, and points concerns
-self-contained, lower cross-feature coupling, and reduce regressions during rapid product iteration.
-
-## Database Types Regeneration
-
-After changing SQL migrations in `supabase/migrations`, regenerate the TypeScript database types so
-feature APIs stay aligned with schema and function signatures.
-
-1. Run migrations against your Supabase project.
-2. Run `npm run db:types`.
-3. Commit the updated `src/shared/types/database.ts` with the migration changes.
+Auth, onboarding walkthrough, guild creation, adventurer management
+(free-tier limits + paywall stub), device pairing, and mode toggle are live
+end to end. Quest library, loot shop, completions/approvals, and the ledger
+UI are the next feature passes (tabs show placeholders).
