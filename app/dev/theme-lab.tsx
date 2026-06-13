@@ -103,7 +103,7 @@ function PrimitivesPreview() {
             key={quest.id}
             emoji={quest.emoji}
             title={quest.title}
-            description={quest.description}
+            description={t(quest.flavorKey)}
             goldReward={quest.goldReward}
             xpReward={quest.xpReward}
             difficulty={quest.difficulty}

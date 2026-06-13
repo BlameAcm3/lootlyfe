@@ -385,6 +385,17 @@ deno_version = 2
 [functions.revenuecat-webhook]
 verify_jwt = false
 
+# send-push is invoked server-to-server by the database (pg_net) with the
+# service-role key in the Authorization header — not a user JWT. The function
+# checks that the bearer equals the service key itself.
+[functions.send-push]
+verify_jwt = false
+
+# export-guild-data runs with the caller's JWT so RLS scopes the export to their
+# own guild (COPPA data-access right). verify_jwt stays ON (the default).
+[functions.export-guild-data]
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

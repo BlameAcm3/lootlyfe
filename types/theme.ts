@@ -1,6 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 
 import type { Palette } from '../constants/theme';
+import type { CosmeticItemKey } from '../data/cosmetics';
 import type { Lexicon, PartialLexicon } from '../lib/lexicon';
 
 /** Icon slots every pack provides art for. */
@@ -17,6 +18,9 @@ export type ThemeSoundKey = 'quest_complete' | 'level_up' | 'gold_pickup' | 'loo
 export type AssetManifest = {
   icons: Record<ThemeIconKey, ImageSourcePropType>;
   avatarBases: ImageSourcePropType[];
+  /** Themed overlay art for every cosmetic catalog item (Record type ensures
+   * a pack can't ship with a missing piece). */
+  cosmetics: Record<CosmeticItemKey, ImageSourcePropType>;
 };
 
 export type SoundManifest = Record<ThemeSoundKey, number>;

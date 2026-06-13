@@ -34,6 +34,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          points: number
+          threshold: number
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          kind: string
+          points: number
+          threshold?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          points?: number
+          threshold?: number
+        }
+        Relationships: []
+      }
+      adventurer_achievements: {
+        Row: {
+          achievement_id: string
+          adventurer_id: string
+          earned_at: string
+          id: string
+        }
+        Insert: {
+          achievement_id: string
+          adventurer_id: string
+          earned_at?: string
+          id?: string
+        }
+        Update: {
+          achievement_id?: string
+          adventurer_id?: string
+          earned_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adventurer_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adventurer_achievements_adventurer_id_fkey"
+            columns: ["adventurer_id"]
+            isOneToOne: false
+            referencedRelation: "adventurer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       adventurer_cosmetics: {
         Row: {
           adventurer_id: string
@@ -182,6 +242,7 @@ export type Database = {
           achievement_point_cost: number
           created_at: string
           id: string
+          item_key: string
           name: string
           premium_only: boolean
           season: string | null
@@ -191,6 +252,7 @@ export type Database = {
           achievement_point_cost?: number
           created_at?: string
           id?: string
+          item_key: string
           name: string
           premium_only?: boolean
           season?: string | null
@@ -200,6 +262,7 @@ export type Database = {
           achievement_point_cost?: number
           created_at?: string
           id?: string
+          item_key?: string
           name?: string
           premium_only?: boolean
           season?: string | null
@@ -316,6 +379,61 @@ export type Database = {
             columns: ["adventurer_id"]
             isOneToOne: false
             referencedRelation: "adventurer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guild_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_npc_id: string | null
+          code: string
+          created_at: string
+          expires_at: string
+          guild_id: string
+          id: string
+          invited_by_npc_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_npc_id?: string | null
+          code: string
+          created_at?: string
+          expires_at?: string
+          guild_id: string
+          id?: string
+          invited_by_npc_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_npc_id?: string | null
+          code?: string
+          created_at?: string
+          expires_at?: string
+          guild_id?: string
+          id?: string
+          invited_by_npc_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guild_invites_accepted_by_npc_id_fkey"
+            columns: ["accepted_by_npc_id"]
+            isOneToOne: false
+            referencedRelation: "npc_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guild_invites_guild_id_fkey"
+            columns: ["guild_id"]
+            isOneToOne: false
+            referencedRelation: "guilds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guild_invites_invited_by_npc_id_fkey"
+            columns: ["invited_by_npc_id"]
+            isOneToOne: false
+            referencedRelation: "npc_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -531,6 +649,38 @@ export type Database = {
           },
         ]
       }
+      npc_notification_settings: {
+        Row: {
+          master_enabled: boolean
+          npc_id: string
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          timezone: string
+        }
+        Insert: {
+          master_enabled?: boolean
+          npc_id: string
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          timezone?: string
+        }
+        Update: {
+          master_enabled?: boolean
+          npc_id?: string
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          timezone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "npc_notification_settings_npc_id_fkey"
+            columns: ["npc_id"]
+            isOneToOne: true
+            referencedRelation: "npc_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       npc_profiles: {
         Row: {
           avatar: string | null
@@ -633,9 +783,11 @@ export type Database = {
           approved_at: string | null
           approved_by_npc_id: string | null
           completed_at: string
+          due_date: string
           id: string
           proof_url: string | null
           quest_id: string
+          rejection_reason: string | null
           status: string
         }
         Insert: {
@@ -643,9 +795,11 @@ export type Database = {
           approved_at?: string | null
           approved_by_npc_id?: string | null
           completed_at?: string
+          due_date?: string
           id?: string
           proof_url?: string | null
           quest_id: string
+          rejection_reason?: string | null
           status?: string
         }
         Update: {
@@ -653,9 +807,11 @@ export type Database = {
           approved_at?: string | null
           approved_by_npc_id?: string | null
           completed_at?: string
+          due_date?: string
           id?: string
           proof_url?: string | null
           quest_id?: string
+          rejection_reason?: string | null
           status?: string
         }
         Relationships: [
@@ -684,6 +840,7 @@ export type Database = {
       }
       quests: {
         Row: {
+          archived_at: string | null
           assigned_adventurer_ids: string[]
           category: string | null
           created_at: string
@@ -694,10 +851,12 @@ export type Database = {
           is_required: boolean
           recurrence: Json | null
           requires_approval: boolean
+          source_preset_id: string | null
           title: string
           xp_reward: number
         }
         Insert: {
+          archived_at?: string | null
           assigned_adventurer_ids?: string[]
           category?: string | null
           created_at?: string
@@ -708,10 +867,12 @@ export type Database = {
           is_required?: boolean
           recurrence?: Json | null
           requires_approval?: boolean
+          source_preset_id?: string | null
           title: string
           xp_reward?: number
         }
         Update: {
+          archived_at?: string | null
           assigned_adventurer_ids?: string[]
           category?: string | null
           created_at?: string
@@ -722,6 +883,7 @@ export type Database = {
           is_required?: boolean
           recurrence?: Json | null
           requires_approval?: boolean
+          source_preset_id?: string | null
           title?: string
           xp_reward?: number
         }
@@ -740,12 +902,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_guild_invite: {
+        Args: { p_code: string; p_display_name?: string }
+        Returns: string
+      }
+      accept_wishlist_item: {
+        Args: { p_gold_cost: number; p_stock?: number; p_wishlist_id: string }
+        Returns: string
+      }
       adventurer_guild_id: {
         Args: { p_adventurer_id: string }
         Returns: string
       }
+      assert_npc_seat_available: {
+        Args: { p_extra: number; p_guild_id: string }
+        Returns: undefined
+      }
+      award_achievements: {
+        Args: { p_adventurer_id: string; p_as_of: string }
+        Returns: undefined
+      }
       bound_adventurer_id: { Args: never; Returns: string }
       bound_guild_id: { Args: never; Returns: string }
+      can_act_for_adventurer: {
+        Args: { p_adventurer_id: string }
+        Returns: boolean
+      }
+      compute_streak: {
+        Args: { p_adventurer_id: string; p_as_of: string }
+        Returns: number
+      }
       create_guild: {
         Args: {
           p_consent_method?: string
@@ -755,6 +941,13 @@ export type Database = {
         }
         Returns: string
       }
+      create_guild_invite: {
+        Args: never
+        Returns: {
+          code: string
+          expires_at: string
+        }[]
+      }
       create_pairing_code: {
         Args: { p_adventurer_id: string }
         Returns: {
@@ -762,12 +955,52 @@ export type Database = {
           expires_at: string
         }[]
       }
+      delete_guild: { Args: { p_guild_id: string }; Returns: undefined }
+      enqueue_push: { Args: { p_payload: Json }; Returns: undefined }
+      had_full_required_week: {
+        Args: { p_adventurer_id: string; p_as_of: string }
+        Returns: boolean
+      }
+      in_quiet_hours: {
+        Args: { p_end: string; p_start: string; p_tz: string }
+        Returns: boolean
+      }
       is_full_user: { Args: never; Returns: boolean }
       is_guild_npc: { Args: { p_guild_id: string }; Returns: boolean }
       level_for_xp: { Args: { p_xp: number }; Returns: number }
+      purchase_cosmetic: {
+        Args: { p_adventurer_id: string; p_cosmetic_id: string }
+        Returns: string
+      }
+      quest_due_on: {
+        Args: { p_day: string; p_recurrence: Json }
+        Returns: boolean
+      }
+      resolve_push_targets: {
+        Args: { p_adventurer_id: string; p_guild_id: string; p_type: string }
+        Returns: {
+          platform: string
+          token: string
+          user_id: string
+        }[]
+      }
+      set_avatar_base: {
+        Args: { p_adventurer_id: string; p_base: number }
+        Returns: undefined
+      }
+      set_equipped_cosmetic: {
+        Args: {
+          p_adventurer_id: string
+          p_cosmetic_id: string
+          p_equipped: boolean
+        }
+        Returns: undefined
+      }
       set_mode_pin: { Args: { p_pin: string }; Returns: undefined }
+      streak_multiplier: { Args: { p_days: number }; Returns: number }
       touch_device_binding: { Args: never; Returns: boolean }
       verify_mode_pin: { Args: { p_pin: string }; Returns: boolean }
+      xp_for_level: { Args: { p_level: number }; Returns: number }
     }
     Enums: {
       [_ in never]: never

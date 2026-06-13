@@ -1,16 +1,18 @@
 import { useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AdventurerForm } from '../../../components/forms/AdventurerForm';
 import { useLexicon } from '../../../hooks/useLexicon';
 import { useCreateAdventurer } from '../../../queries/adventurerQueries';
 import { useCurrentGuild } from '../../../queries/guildQueries';
+import { limitErrorContext, useSubscription } from '@/features/subscriptions';
 
 export default function NewAdventurerScreen() {
   const { t } = useLexicon();
   const router = useRouter();
-  const { guild, isPremium } = useCurrentGuild();
+  const { guild } = useCurrentGuild();
+  const { isPremium, openPaywall } = useSubscription();
   const mutation = useCreateAdventurer(guild?.id ?? '');
 
   if (!guild) return null;
@@ -27,13 +29,21 @@ export default function NewAdventurerScreen() {
           guildIsPremium={isPremium}
           submitting={mutation.isPending}
           onSubmit={async (values) => {
-            await mutation.mutateAsync({
-              nickname: values.nickname,
-              age_bucket: values.ageBucket,
-              theme_id: values.themeId,
-              variant_id: values.variantId,
-            });
-            router.back();
+            try {
+              await mutation.mutateAsync({
+                nickname: values.nickname,
+                age_bucket: values.ageBucket,
+                theme_id: values.themeId,
+                variant_id: values.variantId,
+              });
+              router.back();
+            } catch (error) {
+              // Server trigger is the law: if the free limit was hit (deep link
+              // / stale data), route to the paywall instead of a raw error.
+              const context = limitErrorContext(error);
+              if (context) openPaywall(context);
+              else Alert.alert(t('error_generic'));
+            }
           }}
         />
       </ScrollView>

@@ -16,13 +16,19 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 
 import { useSession } from '@/features/auth';
-import { registerForPushNotificationsAsync, useNotificationListeners } from '@/shared/lib/notifications';
-import { capture, posthog, queryClient } from '@/shared/lib';
+import { registerPushToken, useNotificationListeners } from '@/shared/lib/notifications';
+import { capture, initSentry, posthog, queryClient, wrapWithSentry } from '@/shared/lib';
+
+// Initialize crash/error reporting before the first render (no-op without a DSN).
+initSentry();
+import { ToastHost } from '../components/ui';
 import { useModeStore } from '@/stores/modeStore';
 import { ThemeScope } from '../themes/ThemeProvider';
 import { DEFAULT_THEME_ID } from '../themes';
 import { useOnboardingStore } from '../store/useOnboardingStore';
 import { ROUTES } from '../lib/routes';
+import { configureRevenueCat } from '../lib/revenuecat';
+import { useCurrentGuild } from '../queries/guildQueries';
 
 function RootLayoutEffects() {
   const { session, isLoading, user } = useSession();
@@ -32,11 +38,22 @@ function RootLayoutEffects() {
   const navigationRef = useNavigationContainerRef();
   const hasSeenWalkthrough = useOnboardingStore((state) => state.hasSeenWalkthrough);
   const onboardingHydrated = useOnboardingStore((state) => state.hydrated);
+  const { guild } = useCurrentGuild();
   useNotificationListeners();
 
+  // RevenueCat identifies on the guild id (subscription is per-guild). NPC
+  // sessions only — kids (anonymous) never purchase. No-ops in Expo Go.
+  useEffect(() => {
+    if (!user?.id || user.is_anonymous || !guild?.id) return;
+    void configureRevenueCat(guild.id);
+  }, [user?.id, user?.is_anonymous, guild?.id]);
+
+  // Refresh the push token for users who already opted in — never prompts.
+  // The permission prompt itself fires at the first meaningful moment (NPC:
+  // after creating their first quest; kid: after their first completion).
   useEffect(() => {
     if (!user?.id) return;
-    void registerForPushNotificationsAsync(user.id);
+    void registerPushToken(user.id);
   }, [user?.id]);
 
   useEffect(() => {
@@ -86,6 +103,10 @@ function RootLayoutEffects() {
       // Pairing flow manages its own (anonymous) session.
       const inPairRoute = segments[0] === 'pair' || pathname.startsWith('/pair');
       if (inPairRoute) return;
+      // Co-parent invite acceptance: a signed-in NPC without a guild stays here
+      // (don't bounce them into guild creation).
+      const inAcceptInvite = segments[0] === 'accept-invite' || pathname.startsWith('/accept-invite');
+      if (inAcceptInvite) return;
       // Email deep-link callback: let the code exchange finish undisturbed.
       const inAuthCallback = segments[0] === 'auth' || pathname.startsWith('/auth/callback');
       if (inAuthCallback) return;
@@ -149,7 +170,7 @@ function AppThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
@@ -159,6 +180,7 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <AppThemeProvider>
               <Stack screenOptions={{ headerShown: false }} />
+              <ToastHost />
               <RootLayoutEffects />
             </AppThemeProvider>
           </GestureHandlerRootView>
@@ -167,3 +189,5 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+export default wrapWithSentry(RootLayout);

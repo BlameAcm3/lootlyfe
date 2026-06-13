@@ -2,10 +2,11 @@ import { ROUTES } from '../../lib/routes';
 import { useEffect } from 'react';
 import { Stack, useNavigationContainerRef, usePathname, useRouter, useSegments } from 'expo-router';
 
-import { ErrorBoundary } from '../../components/ui';
+import { ErrorBoundary, OfflineIndicator } from '../../components/ui';
 import { ModeSwitcher, useSession } from '@/features/auth';
 import { useModeStore } from '@/stores/modeStore';
 import { useCurrentGuild } from '../../queries/guildQueries';
+import { useGuildRealtime } from '../../hooks/useGuildRealtime';
 
 export default function ParentLayout() {
   const mode = useModeStore((state) => state.mode);
@@ -15,6 +16,9 @@ export default function ParentLayout() {
   const segments = useSegments() as string[];
   const { user, isLoading: sessionLoading } = useSession();
   const { guild, isLoading: guildLoading } = useCurrentGuild();
+
+  // NPC: live guild channel (RLS scopes delivery to this guild's rows).
+  useGuildRealtime({ guildId: guild?.id });
 
   const onCreateGuild =
     segments.some((segment) => segment.includes('create-guild')) || pathname.includes('create-guild');
@@ -52,6 +56,7 @@ export default function ParentLayout() {
     <ErrorBoundary>
       <>
         <Stack screenOptions={{ headerShown: false }} />
+        <OfflineIndicator />
         <ModeSwitcher />
       </>
     </ErrorBoundary>

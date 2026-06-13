@@ -3,10 +3,11 @@ import { useEffect } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { AppState } from 'react-native';
 
-import { ErrorBoundary } from '../../components/ui';
+import { ErrorBoundary, OfflineIndicator } from '../../components/ui';
 import { ModeSwitcher, useSession } from '@/features/auth';
 import { useModeStore } from '@/stores/modeStore';
 import { ThemeScope } from '../../themes/ThemeProvider';
+import { useGuildRealtime } from '../../hooks/useGuildRealtime';
 import {
   touchDeviceBinding,
   useBoundAdventurer,
@@ -34,6 +35,10 @@ export default function AdventurerLayout() {
   const adventurerId = isAnon ? (bindingActive ? binding?.adventurer_id : null) : activeAdventurerId;
   const adventurerQuery = useBoundAdventurer(adventurerId);
   const adventurer = adventurerQuery.data ?? null;
+
+  // Kid device: live channel scoped to this adventurer's own rows (RLS + an
+  // adventurer_id filter on the adventurer-owned tables).
+  useGuildRealtime({ guildId: adventurer?.guild_id, adventurerId: adventurer?.id });
 
   // Heartbeat: update last_seen_at on launch and every foreground; a false
   // result means the binding was revoked while we were running.
@@ -100,6 +105,7 @@ export default function AdventurerLayout() {
         variantId={adventurer.variant_id === 'default' ? null : adventurer.variant_id}
       >
         <Stack screenOptions={{ headerShown: false }} />
+        <OfflineIndicator />
         {!isAnon ? <ModeSwitcher /> : null}
       </ThemeScope>
     </ErrorBoundary>

@@ -10,6 +10,7 @@ export type AdventurerRow = Database['public']['Tables']['adventurer_profiles'][
 
 export const pairingKeys = {
   bindings: (adventurerId: string) => ['device-bindings', adventurerId] as const,
+  guildBindings: (guildId: string) => ['device-bindings', 'guild', guildId] as const,
   ownBinding: ['own-binding'] as const,
   boundAdventurer: (adventurerId: string) => ['bound-adventurer', adventurerId] as const,
 };
@@ -58,6 +59,40 @@ export const useRevokeBinding = (adventurerId: string) => {
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: pairingKeys.bindings(adventurerId) });
+    },
+  });
+};
+
+/** NPC: all bindings across the guild (settings revoke dashboard). */
+export const useGuildDeviceBindings = (guildId: string | null | undefined) => {
+  return useQuery({
+    enabled: Boolean(guildId),
+    queryKey: pairingKeys.guildBindings(guildId ?? 'none'),
+    queryFn: async (): Promise<DeviceBindingRow[]> => {
+      const { data, error } = await supabase
+        .from('device_bindings')
+        .select('*')
+        .eq('guild_id', guildId ?? '')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
+/** Revoke a binding, invalidating every device-binding view (guild + per-kid). */
+export const useRevokeGuildBinding = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (bindingId: string) => {
+      const { error } = await supabase
+        .from('device_bindings')
+        .update({ revoked_at: new Date().toISOString() })
+        .eq('id', bindingId);
+      if (error) throw error;
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['device-bindings'] });
     },
   });
 };

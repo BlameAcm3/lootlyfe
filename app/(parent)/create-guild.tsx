@@ -94,6 +94,13 @@ export default function CreateGuildScreen() {
               onPress={handleCreate}
             />
           </Card>
+
+          {/* Co-parents joining an existing guild come in with an invite code. */}
+          <Pressable accessibilityRole="link" onPress={() => router.push('/accept-invite')}>
+            <Text className="text-accent-info text-center text-sm font-semibold">
+              {t('invite_accept_title')}
+            </Text>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

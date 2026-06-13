@@ -7,7 +7,9 @@ import { Badge, Button, Card } from '../../../components/ui';
 import { GoldCounter, StreakFlame, XPBar } from '../../../components/game';
 import { getCrest } from '../../../data/crests';
 import { useLexicon } from '../../../hooks/useLexicon';
+import { xpProgress } from '../../../lib/game-math';
 import { useAdventurers } from '../../../queries/adventurerQueries';
+import { usePendingCompletions } from '../../../queries/completionsQueries';
 import { useCurrentGuild } from '../../../queries/guildQueries';
 import { getThemePack } from '../../../themes';
 
@@ -24,10 +26,10 @@ export default function GuildDashboardScreen() {
   const { user } = useSession();
   const { guild, npcProfile } = useCurrentGuild();
   const adventurersQuery = useAdventurers(guild?.id);
+  const pendingCount = usePendingCompletions(guild?.id).data?.length ?? 0;
 
   const adventurers = (adventurersQuery.data ?? []).filter((row) => !row.archived_at);
-  const displayName =
-    npcProfile?.display_name ?? user?.email?.split('@')[0] ?? t('npc');
+  const displayName = npcProfile?.display_name ?? user?.email?.split('@')[0] ?? t('npc');
 
   return (
     <SafeAreaView style={{ flex: 1 }} className="bg-bg-base" edges={['top']}>
@@ -44,6 +46,24 @@ export default function GuildDashboardScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Approval queue entry */}
+        {pendingCount > 0 ? (
+          <Pressable accessibilityRole="button" onPress={() => router.push('/(parent)/approvals')}>
+            <Card raised className="flex-row items-center gap-3">
+              <Text className="text-3xl">📜</Text>
+              <View className="flex-1">
+                <Text className="text-text-primary text-sm font-extrabold">
+                  {t('approvals_title')}
+                </Text>
+                <Text className="text-text-muted text-xs">
+                  {t('approvals_link_label', { count: pendingCount })}
+                </Text>
+              </View>
+              <Badge label={String(pendingCount)} tone="danger" />
+            </Card>
+          </Pressable>
+        ) : null}
 
         {/* Roster */}
         <View className="flex-row items-center justify-between pt-2">
@@ -107,8 +127,8 @@ export default function GuildDashboardScreen() {
                     <Badge label={pack.name} tone="achievement" />
                   </View>
                   <XPBar
-                    xp={adventurer.xp_total}
-                    xpToNext={adventurer.level * adventurer.level * 100}
+                    xp={xpProgress(adventurer.xp_total).into}
+                    xpToNext={xpProgress(adventurer.xp_total).toNext}
                     level={adventurer.level}
                   />
                   <View className="flex-row gap-2">

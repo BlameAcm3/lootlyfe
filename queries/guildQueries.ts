@@ -79,3 +79,32 @@ export const useCreateGuild = () => {
     },
   });
 };
+
+/**
+ * Owner-only cascading guild deletion (delete_guild RPC). Consent events are
+ * retained server-side per policy; everything else is removed. Caller signs out
+ * + resets local state afterward.
+ */
+export const useDeleteGuild = () => {
+  return useMutation({
+    mutationFn: async (guildId: string) => {
+      const { error } = await supabase.rpc('delete_guild', { p_guild_id: guildId });
+      if (error) throw error;
+    },
+  });
+};
+
+/** COPPA data export: invokes export-guild-data (RLS-scoped to the caller). */
+export const useGuildDataExport = (enabled: boolean) => {
+  return useQuery({
+    enabled,
+    queryKey: ['guild', 'export'],
+    gcTime: 0,
+    staleTime: 0,
+    queryFn: async (): Promise<string> => {
+      const { data, error } = await supabase.functions.invoke('export-guild-data', { body: {} });
+      if (error) throw error;
+      return JSON.stringify(data, null, 2);
+    },
+  });
+};

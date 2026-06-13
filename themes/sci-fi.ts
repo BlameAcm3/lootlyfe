@@ -4,6 +4,19 @@ import iconGold from '../assets/images/themes/sci-fi/icon-gold.png';
 import iconStreak from '../assets/images/themes/sci-fi/icon-streak.png';
 import avatarA from '../assets/images/themes/sci-fi/avatar-a.png';
 import avatarB from '../assets/images/themes/sci-fi/avatar-b.png';
+import avatarC from '../assets/images/themes/sci-fi/avatar-c.png';
+import cosmeticHeadStarter from '../assets/images/themes/sci-fi/cosmetic-head-starter.png';
+import cosmeticHeadGuard from '../assets/images/themes/sci-fi/cosmetic-head-guard.png';
+import cosmeticHeadCrown from '../assets/images/themes/sci-fi/cosmetic-head-crown.png';
+import cosmeticHeadMythic from '../assets/images/themes/sci-fi/cosmetic-head-mythic.png';
+import cosmeticBodyStarter from '../assets/images/themes/sci-fi/cosmetic-body-starter.png';
+import cosmeticBodyScout from '../assets/images/themes/sci-fi/cosmetic-body-scout.png';
+import cosmeticBodyKnight from '../assets/images/themes/sci-fi/cosmetic-body-knight.png';
+import cosmeticBodyMythic from '../assets/images/themes/sci-fi/cosmetic-body-mythic.png';
+import cosmeticAccStarter from '../assets/images/themes/sci-fi/cosmetic-acc-starter.png';
+import cosmeticAccCharm from '../assets/images/themes/sci-fi/cosmetic-acc-charm.png';
+import cosmeticAccBanner from '../assets/images/themes/sci-fi/cosmetic-acc-banner.png';
+import cosmeticAccMythic from '../assets/images/themes/sci-fi/cosmetic-acc-mythic.png';
 import soundQuestComplete from '../assets/sounds/themes/sci-fi/quest-complete.wav';
 import soundLevelUp from '../assets/sounds/themes/sci-fi/level-up.wav';
 import soundGoldPickup from '../assets/sounds/themes/sci-fi/gold-pickup.wav';
@@ -80,10 +93,76 @@ export const sciFi: ThemePack = {
     quests_done_label: 'Missions Done',
     badges_label: 'Medals',
     preview_level_up: 'Preview the rank up ceremony',
+    // Mission categories + flavor — titles stay literal across themes.
+    category_chores: 'Ship Chores',
+    category_hygiene: 'Decon Protocol',
+    category_school: 'Academy Studies',
+    category_kindness: 'Crew Kindness',
+    category_exercise: 'Physical Training',
+    preset_flavor_make_bed: 'Bunk squared away to fleet standard.',
+    preset_flavor_tidy_room: 'Stow all gear in the cargo lockers — deck clear.',
+    preset_flavor_feed_pet: "Ration the ship's creature and top up its water.",
+    preset_flavor_brush_teeth: 'Two-minute polish cycle, morning and night.',
+    preset_flavor_take_shower: 'Full decon cycle — emerge sparkling.',
+    preset_flavor_read_20: 'Download 20 minutes of knowledge. Comics count.',
+    preset_flavor_pack_bag: 'Homework, water, lunch — pre-flight checklist complete.',
+    preset_flavor_walk_dog: 'Patrol the perimeter with your four-legged crewmate.',
+    preset_flavor_play_outside: 'EVA time: 30 minutes outside the airlock.',
+    preset_flavor_stretch: 'Zero-g flexibility drills, 10 minutes.',
+    quest_awaiting_approval: 'Transmitted to your Commander — rewards arrive on confirmation!',
+    quest_rejected_kind: 'Mission debrief: {reason}. Recalibrate and relaunch, Cadet!',
+    quest_try_again_action: 'Relaunch',
+    complete_error_body: 'Transmission glitch — fire it off again!',
+    streak_bonus_label: '×{multiplier} warp bonus',
+    level_up_spoils_label: 'Mission rewards',
+    level_up_points_line: '+{points} Commendations',
+    level_up_continue_action: 'Back to the bridge!',
+    // Profile, store, achievements.
+    profile_title: 'Cadet Profile',
+    equipped_section_label: 'Equipped Gear',
+    avatar_base_label: 'Choose your cadet',
+    cosmetic_store_title: 'Gear Fabricator',
+    cosmetic_store_subtitle: 'Spend your Commendations on elite gear',
+    slot_head: 'Helmet',
+    slot_body: 'Suit',
+    slot_accessory: 'Gadget',
+    cosmetic_cost_label: '{points} Commendations',
+    cosmetic_need_more: 'Earn {points} more Commendations to fabricate this!',
+    cosmetic_premium_locked_label: 'Elite Colony',
+    cosmetic_premium_nudge: 'This gear is for Elite Colonies. Ask your Commander about upgrading!',
+    cosmetic_head_starter_name: 'Cadet Visor',
+    cosmetic_head_guard_name: 'Pilot Helmet',
+    cosmetic_head_crown_name: 'Command Crest',
+    cosmetic_head_mythic_name: 'Singularity Halo',
+    cosmetic_body_starter_name: 'Flight Suit',
+    cosmetic_body_scout_name: 'Recon Rig',
+    cosmetic_body_knight_name: 'Power Armor',
+    cosmetic_body_mythic_name: 'Nebula Cloak',
+    cosmetic_acc_starter_name: 'Comm Badge',
+    cosmetic_acc_charm_name: 'Plasma Cell',
+    cosmetic_acc_banner_name: 'Colony Pennant',
+    cosmetic_acc_mythic_name: 'Pulsar Core',
+    achievement_earned_title: 'Medal Earned!',
+    achievements_title: 'Medals',
+    ach_quests_250_name: 'Legend of the Colony',
   },
   assets: {
     icons: { quest: iconQuest, loot: iconLoot, gold: iconGold, streak: iconStreak },
-    avatarBases: [avatarA, avatarB],
+    avatarBases: [avatarA, avatarB, avatarC],
+    cosmetics: {
+      'head-starter': cosmeticHeadStarter,
+      'head-guard': cosmeticHeadGuard,
+      'head-crown': cosmeticHeadCrown,
+      'head-mythic': cosmeticHeadMythic,
+      'body-starter': cosmeticBodyStarter,
+      'body-scout': cosmeticBodyScout,
+      'body-knight': cosmeticBodyKnight,
+      'body-mythic': cosmeticBodyMythic,
+      'acc-starter': cosmeticAccStarter,
+      'acc-charm': cosmeticAccCharm,
+      'acc-banner': cosmeticAccBanner,
+      'acc-mythic': cosmeticAccMythic,
+    },
   },
   sounds: {
     quest_complete: soundQuestComplete,
@@ -101,7 +180,7 @@ export const sciFi: ThemePack = {
         'accent-loot': '#ff8de1',
         'accent-info': '#9a6bff',
       },
-      avatarBases: [0],
+      avatarBases: [0, 2],
     },
     {
       id: 'red-planet',
@@ -112,7 +191,7 @@ export const sciFi: ThemePack = {
         'accent-loot': '#ffb45e',
         'accent-progress': '#e0813f',
       },
-      avatarBases: [1],
+      avatarBases: [1, 2],
     },
   ],
 };

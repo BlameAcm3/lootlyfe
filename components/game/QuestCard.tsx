@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import { cn } from '../../lib/cn';
 import { useLexicon } from '../../hooks/useLexicon';
 import type { LexiconKey } from '../../lib/lexicon';
-import type { QuestRecurrence } from '../../data/presetQuests';
+import type { RecurrenceType } from '../../lib/recurrence';
 
 type QuestCardProps = {
   emoji: string;
@@ -11,15 +11,16 @@ type QuestCardProps = {
   description?: string;
   goldReward: number;
   xpReward: number;
-  difficulty: 1 | 2 | 3;
-  recurrence?: QuestRecurrence;
+  difficulty?: 1 | 2 | 3;
+  recurrence?: RecurrenceType;
   /** Completed styling (checked tile, dimmed). */
   done?: boolean;
 };
 
-const recurrenceKeys: Record<QuestRecurrence, LexiconKey> = {
+const recurrenceKeys: Record<RecurrenceType, LexiconKey> = {
   daily: 'recurrence_daily',
   weekly: 'recurrence_weekly',
+  monthly: 'recurrence_monthly',
   once: 'recurrence_once',
 };
 
@@ -71,7 +72,7 @@ export const QuestCard = ({
           <Text className="text-text-primary flex-1 text-base font-extrabold" numberOfLines={1}>
             {title}
           </Text>
-          <DifficultyPips level={difficulty} />
+          {difficulty ? <DifficultyPips level={difficulty} /> : null}
         </View>
         {description ? (
           <Text className="text-text-muted text-xs leading-4" numberOfLines={2}>

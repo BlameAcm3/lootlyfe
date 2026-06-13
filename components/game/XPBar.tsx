@@ -11,7 +11,8 @@ type XPBarProps = {
 
 export const XPBar = ({ xp, xpToNext, level }: XPBarProps) => {
   const { t } = useLexicon();
-  const progress = xpToNext > 0 ? xp / xpToNext : 0;
+  // xpToNext === 0 means the level cap: full bar, no next-level label.
+  const progress = xpToNext > 0 ? xp / xpToNext : 1;
 
   return (
     <View className="gap-1.5">
@@ -19,9 +20,11 @@ export const XPBar = ({ xp, xpToNext, level }: XPBarProps) => {
         <Text className="text-text-primary text-xs font-bold">
           {t('level')} {level}
         </Text>
-        <Text className="text-text-muted text-xs">
-          {t('xp_to_next', { xp: Math.max(0, xpToNext - xp), level: level + 1 })}
-        </Text>
+        {xpToNext > 0 ? (
+          <Text className="text-text-muted text-xs">
+            {t('xp_to_next', { xp: Math.max(0, xpToNext - xp), level: level + 1 })}
+          </Text>
+        ) : null}
       </View>
       <ProgressBar progress={progress} tone="progress" />
     </View>

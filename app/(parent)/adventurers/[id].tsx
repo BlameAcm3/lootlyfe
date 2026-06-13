@@ -8,12 +8,13 @@ import { Badge, Button, Card, Modal } from '../../../components/ui';
 import { useLexicon } from '../../../hooks/useLexicon';
 import { useAdventurers, useUpdateAdventurer } from '../../../queries/adventurerQueries';
 import { useCurrentGuild } from '../../../queries/guildQueries';
+import { useSubscription } from '@/features/subscriptions';
 import {
   useCreatePairingCode,
   useDeviceBindings,
   useRevokeBinding,
 } from '../../../queries/pairingQueries';
-import { themePacks, type ThemeId } from '../../../themes';
+import { getThemePack, themePacks, type ThemeId } from '../../../themes';
 
 function formatCountdown(msLeft: number) {
   const totalSeconds = Math.max(0, Math.floor(msLeft / 1000));
@@ -91,7 +92,8 @@ export default function EditAdventurerScreen() {
   const { t } = useLexicon();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { guild, isPremium } = useCurrentGuild();
+  const { guild } = useCurrentGuild();
+  const { isPremium, lockedIdsFor, openPaywall } = useSubscription();
   const adventurersQuery = useAdventurers(guild?.id);
   const mutation = useUpdateAdventurer(guild?.id ?? '');
   const bindingsQuery = useDeviceBindings(id);
@@ -103,6 +105,11 @@ export default function EditAdventurerScreen() {
 
   const isArchived = Boolean(adventurer.archived_at);
   const bindings = bindingsQuery.data ?? [];
+  // Downgrade matrix: on a lapsed (free) guild the newest adventurers beyond the
+  // free limit are read-only — profile editing is locked, but their already-
+  // paired kid devices keep working (device list + archive stay available).
+  const active = (adventurersQuery.data ?? []).filter((row) => !row.archived_at);
+  const isLocked = lockedIdsFor('adventurers', active).has(adventurer.id);
 
   return (
     <SafeAreaView style={{ flex: 1 }} className="bg-bg-base">
@@ -113,29 +120,50 @@ export default function EditAdventurerScreen() {
           </Text>
         </View>
 
-        <AdventurerForm
-          initial={{
-            nickname: adventurer.nickname,
-            ageBucket: isAgeBucket(adventurer.age_bucket) ? adventurer.age_bucket : '5-8',
-            themeId: (adventurer.theme_id in themePacks ? adventurer.theme_id : 'high-fantasy') as ThemeId,
-            variantId: adventurer.variant_id,
-          }}
-          guildIsPremium={isPremium}
-          submitting={mutation.isPending}
-          onSubmit={(values) => {
-            // Optimistic: the list cache is patched immediately (rollback on error).
-            mutation.mutate({
-              id: adventurer.id,
-              patch: {
-                nickname: values.nickname,
-                age_bucket: values.ageBucket,
-                theme_id: values.themeId,
-                variant_id: values.variantId,
-              },
-            });
-            router.back();
-          }}
-        />
+        {isLocked ? (
+          <Card className="gap-3">
+            <View className="flex-row items-center gap-2">
+              <Text className="text-xl">🔒</Text>
+              <Text className="text-text-primary text-base font-bold">{adventurer.nickname}</Text>
+              <Badge label={t('locked_badge_label')} tone="muted" />
+            </View>
+            <Text className="text-text-muted text-sm leading-5">{t('locked_upgrade_nudge')}</Text>
+            <Text className="text-text-muted text-xs">
+              {getThemePack(adventurer.theme_id).name} · {adventurer.age_bucket}
+            </Text>
+            <Button
+              label={t('upgrade_action')}
+              variant="gold"
+              onPress={() => openPaywall('adventurer_limit')}
+            />
+          </Card>
+        ) : (
+          <AdventurerForm
+            initial={{
+              nickname: adventurer.nickname,
+              ageBucket: isAgeBucket(adventurer.age_bucket) ? adventurer.age_bucket : '5-8',
+              themeId: (adventurer.theme_id in themePacks
+                ? adventurer.theme_id
+                : 'high-fantasy') as ThemeId,
+              variantId: adventurer.variant_id,
+            }}
+            guildIsPremium={isPremium}
+            submitting={mutation.isPending}
+            onSubmit={(values) => {
+              // Optimistic: the list cache is patched immediately (rollback on error).
+              mutation.mutate({
+                id: adventurer.id,
+                patch: {
+                  nickname: values.nickname,
+                  age_bucket: values.ageBucket,
+                  theme_id: values.themeId,
+                  variant_id: values.variantId,
+                },
+              });
+              router.back();
+            }}
+          />
+        )}
 
         {/* Paired devices */}
         <Card className="gap-3">

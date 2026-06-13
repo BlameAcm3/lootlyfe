@@ -5,6 +5,8 @@ export { ErrorBoundary } from './ErrorBoundary';
 export { GradientButton } from './GradientButton';
 export { Input } from './Input';
 export { Modal } from './Modal';
+export { OfflineIndicator } from './OfflineIndicator';
 export { ProgressBar } from './ProgressBar';
 export { SectionHeader } from './SectionHeader';
 export { StarfieldBackground } from './StarfieldBackground';
+export { ToastHost } from './Toast';

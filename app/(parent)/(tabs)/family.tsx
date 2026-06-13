@@ -1,17 +1,25 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, Share, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Badge, Button, Card, Modal } from '../../../components/ui';
-import { FREE_TIER_LIMITS } from '../../../constants/game';
 import { useLexicon } from '../../../hooks/useLexicon';
 import { useAdventurers, type AdventurerRow } from '../../../queries/adventurerQueries';
 import { useCurrentGuild } from '../../../queries/guildQueries';
+import { useCreateGuildInvite, type GuildInvite } from '../../../queries/invitesQueries';
+import { useSubscription } from '@/features/subscriptions';
 import { getThemePack } from '../../../themes';
-import { ROUTES } from '../../../lib/routes';
 
-function AdventurerCard({ adventurer, onPress }: { adventurer: AdventurerRow; onPress: () => void }) {
+function AdventurerCard({
+  adventurer,
+  onPress,
+  lockedLabel,
+}: {
+  adventurer: AdventurerRow;
+  onPress: () => void;
+  lockedLabel?: string;
+}) {
   const pack = getThemePack(adventurer.theme_id);
   return (
     <Pressable accessibilityRole="button" onPress={onPress}>
@@ -22,6 +30,7 @@ function AdventurerCard({ adventurer, onPress }: { adventurer: AdventurerRow; on
           <View className="flex-row gap-2">
             <Badge label={adventurer.age_bucket} tone="info" />
             <Badge label={pack.name} tone="achievement" />
+            {lockedLabel ? <Badge label={lockedLabel} tone="muted" /> : null}
           </View>
         </View>
         <Text className="text-text-muted text-xl">›</Text>
@@ -33,18 +42,46 @@ function AdventurerCard({ adventurer, onPress }: { adventurer: AdventurerRow; on
 export default function AdventurersScreen() {
   const { t } = useLexicon();
   const router = useRouter();
-  const { guild, isPremium } = useCurrentGuild();
+  const { guild } = useCurrentGuild();
+  const { isPremium, checkLimit, lockedIdsFor, openPaywall, limits } = useSubscription();
   const adventurersQuery = useAdventurers(guild?.id);
   const [limitNudgeVisible, setLimitNudgeVisible] = useState(false);
+  const inviteMutation = useCreateGuildInvite();
+  const [invite, setInvite] = useState<GuildInvite | null>(null);
+
+  // Co-parent invites are premium (free = 1 NPC). Non-premium guilds go to the
+  // paywall (with the co-parent headline) instead of minting a code. The server
+  // also enforces this in accept_guild_invite/create_guild_invite (migration 016).
+  const handleInvite = async () => {
+    if (!isPremium) {
+      openPaywall('coparent');
+      return;
+    }
+    try {
+      setInvite(await inviteMutation.mutateAsync());
+    } catch {
+      Alert.alert(t('invite_error_generic'));
+    }
+  };
+
+  const shareInvite = async (code: string) => {
+    try {
+      await Share.share({ message: `${t('invite_code_share_hint')} ${code}` });
+    } catch {
+      /* user dismissed the share sheet */
+    }
+  };
 
   const adventurers = adventurersQuery.data ?? [];
   const active = adventurers.filter((adventurer) => !adventurer.archived_at);
   const archived = adventurers.filter((adventurer) => adventurer.archived_at);
+  // Downgrade matrix: on a lapsed (free) guild, the newest adventurers beyond
+  // the free limit are read-only (locked badge here; edit disabled in detail).
+  const lockedAdventurerIds = lockedIdsFor('adventurers', active);
 
   const handleAdd = () => {
-    // Client-side FREE_TIER_LIMITS enforcement with the upgrade-nudge pattern;
-    // server-side enforcement lands with the premium Edge Function pass.
-    if (!isPremium && active.length >= FREE_TIER_LIMITS.adventurers) {
+    // Client check is UX; the BEFORE INSERT trigger (migration 017) is the law.
+    if (!checkLimit('adventurers', active.length).allowed) {
       setLimitNudgeVisible(true);
       return;
     }
@@ -77,6 +114,7 @@ export default function AdventurersScreen() {
             <AdventurerCard
               key={adventurer.id}
               adventurer={adventurer}
+              lockedLabel={lockedAdventurerIds.has(adventurer.id) ? t('locked_badge_label') : undefined}
               onPress={() =>
                 router.push({ pathname: '/(parent)/adventurers/[id]', params: { id: adventurer.id } })
               }
@@ -104,20 +142,51 @@ export default function AdventurersScreen() {
             ))}
           </View>
         ) : null}
+
+        <Card className="mt-4 gap-3">
+          <Text className="text-text-primary text-base font-bold">{t('npc')}s</Text>
+          <Text className="text-text-muted text-sm leading-5">
+            {isPremium ? t('notif_master_hint') : t('invite_premium_required')}
+          </Text>
+          <Button
+            label={t('invite_coparent_action')}
+            variant={isPremium ? 'primary' : 'gold'}
+            disabled={inviteMutation.isPending}
+            onPress={handleInvite}
+          />
+        </Card>
       </ScrollView>
+
+      <Modal visible={Boolean(invite)} onClose={() => setInvite(null)}>
+        <View className="gap-3">
+          <Text className="text-text-primary text-lg font-extrabold">{t('invite_code_title')}</Text>
+          <Text className="text-text-muted text-sm">{t('invite_code_share_hint')}</Text>
+          <View className="bg-bg-base border-border items-center rounded-xl border py-4">
+            <Text className="text-text-primary text-3xl font-extrabold tracking-[6px]">
+              {invite?.code}
+            </Text>
+          </View>
+          <Button
+            label={t('invite_share_action')}
+            variant="primary"
+            onPress={() => invite && shareInvite(invite.code)}
+          />
+          <Button label={t('cancel_action')} variant="ghost" onPress={() => setInvite(null)} />
+        </View>
+      </Modal>
 
       <Modal visible={limitNudgeVisible} onClose={() => setLimitNudgeVisible(false)}>
         <View className="gap-3">
           <Text className="text-text-primary text-lg font-extrabold">{t('limit_title')}</Text>
           <Text className="text-text-muted text-sm leading-5">
-            {t('limit_body', { limit: FREE_TIER_LIMITS.adventurers })}
+            {t('limit_body', { limit: limits.adventurers })}
           </Text>
           <Button
             label={t('upgrade_action')}
             variant="gold"
             onPress={() => {
               setLimitNudgeVisible(false);
-              router.push(ROUTES.paywall);
+              openPaywall('adventurer_limit');
             }}
           />
           <Button

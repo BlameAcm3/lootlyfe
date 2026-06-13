@@ -24,24 +24,32 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',
-      backgroundColor: '#ffffff',
+      // Dark-first brand: deep indigo-black, consistent with the RPG-neutral skin.
+      backgroundColor: '#0B1020',
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.lootlyfe.app',
+      // Placeholder org — replace PLACEHOLDER with your Apple Team's reverse-DNS
+      // org before submitting (must match the App Store Connect bundle id).
+      bundleIdentifier: 'com.PLACEHOLDER.lootlyfe',
+      buildNumber: '1',
       entitlements: {
-        'aps-environment': 'development',
+        // APNs environment: 'production' for TestFlight/App Store, 'development'
+        // for dev-client builds. Driven per EAS profile via APS_ENVIRONMENT.
+        'aps-environment': withFallback(process.env.APS_ENVIRONMENT, 'production'),
       },
       infoPlist: {
         UIBackgroundModes: ['remote-notification'],
+        ITSAppUsesNonExemptEncryption: false,
       },
     },
     android: {
-      package: 'com.chorequest.app',
+      package: 'com.PLACEHOLDER.lootlyfe',
+      versionCode: 1,
       permissions: ['POST_NOTIFICATIONS'],
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#0B1020',
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
@@ -59,6 +67,16 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       'expo-secure-store',
+      [
+        // Uploads source maps to Sentry during EAS Build when SENTRY_AUTH_TOKEN
+        // is present (org/project resolved from env). Safe no-op locally.
+        '@sentry/react-native/expo',
+        {
+          url: 'https://sentry.io/',
+          organization: process.env.SENTRY_ORG,
+          project: process.env.SENTRY_PROJECT,
+        },
+      ],
     ],
     extra: {
       ...extra,
